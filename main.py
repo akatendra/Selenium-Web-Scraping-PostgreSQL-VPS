@@ -27,6 +27,11 @@ def sleep_time(max_sec):
     time.sleep(rand_time)
 
 
+def sleep_time_minutes(max_min):
+    rand_time = randint(1, max_min)
+    time.sleep(rand_time * 60)
+
+
 def run_flow(URL, start_page, end_page, parse_func, write_to_db_func):
     global browsers
     # Initialize web browser
@@ -57,7 +62,7 @@ def run_flow(URL, start_page, end_page, parse_func, write_to_db_func):
         html = browser.page_source
         logger.debug(
             f'Page_source of page {current_page} received: {spent_time()}')
-        output_data = parse_func(html)
+        output_data = parse_func(html, current_page)
         logger.debug(
             f'Output_data of page {current_page} received: {spent_time()}')
         # xlsx.append_xlsx_file(output_data, output_filename, page_number)
@@ -99,6 +104,10 @@ if __name__ == "__main__":
     # Set up logging
     logging.config.fileConfig("logging.ini", disable_existing_loggers=False)
     logger = logging.getLogger(__name__)
+    # Remove matplotlib.font_manager from logging
+    # logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
+    # Remove all matplotlib from logging
+    logging.getLogger('matplotlib').setLevel(logging.WARNING)
 
     # Set the variables values
     time_begin = start_time = time.time()
@@ -122,8 +131,6 @@ if __name__ == "__main__":
     write_db_novostroyka = database.write_to_db_kvartiry_novostroyka
     write_db_doma = database.write_to_db_doma_dachi_kottedzhi
 
-
-
     logger.info('Start...')
 
     # Adding multithreading
@@ -131,7 +138,8 @@ if __name__ == "__main__":
     # kvartiry_vtorichka
 
     # 6 threads
-    pages = [(1, 14), (15, 32), (33, 48), (49, 63), (64, 82), (83, 100)]
+    # pages = [(1, 14), (15, 32), (33, 48), (49, 63), (64, 82), (83, 100)]
+    pages = [(1, 24), (25, 51), (52, 77), (78, 100)]
     # pages = [(1, 3)]
 
     # 8 threads
@@ -147,7 +155,8 @@ if __name__ == "__main__":
     # kvartiry_novostroyka
     pages.clear()
     # 6 threads
-    pages = [(1, 9), (10, 17), (18, 23), (24, 32), (33, 41), (42, 47)]
+    # pages = [(1, 9), (10, 17), (18, 23), (24, 32), (33, 41), (42, 47)]
+    pages = [(1, 12), (13, 24), (25, 36), (37, 47)]
     # pages = [(1, 3)]
 
     # 8 threads
@@ -163,7 +172,8 @@ if __name__ == "__main__":
     # doma_dachi_kottedzhi
     pages.clear()
     # 6 threads
-    pages = [(1, 14), (15, 32), (33, 48), (49, 63), (64, 82), (83, 100)]
+    # pages = [(1, 14), (15, 32), (33, 48), (49, 63), (64, 82), (83, 100)]
+    pages = [(1, 24), (25, 51), (52, 77), (78, 100)]
     # pages = [(1, 3)]
 
     # 8 threads

@@ -129,6 +129,18 @@ def get_item_ids_list(table):
     return item_ids
 
 
+def get_days_count(table):
+    sql_get_days_count = f'''
+                            SELECT Count(*)
+                            FROM   (SELECT To_char(item_date, 'YYYY-MM-DD')
+                                    FROM   kvartiry_vtorichka
+                                    GROUP  BY To_char(item_date, 'YYYY-MM-DD')) AS itmd;
+                          '''
+    days_count = execute_sql_query(sql_get_days_count)
+    logger.debug(f'days_count: {days_count}')
+    return days_count
+
+
 def write_to_db_kvartiry_vtorichka(data):
     table = 'kvartiry_vtorichka'
     # values = ', '.join(['%s'] * 17)
@@ -160,7 +172,7 @@ def write_to_db_kvartiry_vtorichka(data):
     logger.debug(f'item_ids_to_write: {item_ids_to_write}')
     logger.debug(f'vtorichka_counter: {scraper.vtorichka_counter}')
     for item_id in item_ids_to_write:
-    # for item_id in item_ids:
+        # for item_id in item_ids:
         logger.debug(f'item_id: {item_id}')
         # Check if item_id is already exist in database
         # if item_id not in item_ids_database:

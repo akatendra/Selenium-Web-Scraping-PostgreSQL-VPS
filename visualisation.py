@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import timedelta, datetime
 
 import seaborn as sb
 import pandas as pd
@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 import logging.config
 
-timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+timestamp = (datetime.now() + timedelta(hours=3)).strftime("%d-%m-%Y %H:%M:%S")
 
 
 def cm_to_inch(value):
@@ -69,13 +69,13 @@ def put_timestamp(horizontal='left', vertical='top'):
             horizontalalignment=horizontal,
             verticalalignment=vertical,
             color='r',
-            size=10,
+            size=12,
             transform=ax.transAxes)
 
 
 def get_visualization():
     # Set up logging
-    logging.config.fileConfig("logging.ini", disable_existing_loggers=False)
+    logging.config.fileConfig("logging_visualisation.ini", disable_existing_loggers=False)
     logger = logging.getLogger(__name__)
     # Remove matplotlib.font_manager from logging
     # logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
@@ -91,19 +91,26 @@ def get_visualization():
                   })
 
     # 1. Количество новых объявлений по дням квартиры-вторичка
+    # Количество дней в БД
+    days_count = database.get_days_count('kvartiry_vtorichka')
+    logger.debug(f'days_count {days_count}')
+    # Aspect ratio
+    aspect = int(days_count[0][0] // 5)
+    logger.debug(f'aspect {aspect}')
+
     data1 = database.get_item_count_per_day2('kvartiry_vtorichka')
     df1 = pd.DataFrame(data1, columns=['Дата'])
     df1.sort_values(by=['Дата'],
                     axis=0,
                     inplace=True,
                     ascending=True)
-    print(df1)
+    logger.debug(f'{df1}')
     histogram = sb.displot(data=df1,
                            x='Дата',
                            kind='hist',
                            kde=True,
                            height=6,
-                           aspect=5)
+                           aspect=aspect)
     histogram.set(ylabel='Кол-во новых объявлений в день')
     histogram.set(title='Кол-во новых объявлений по дням | Квартиры-вторичка')
 
@@ -131,7 +138,7 @@ def get_visualization():
                      axis=0,
                      inplace=True,
                      ascending=True)
-    print(df11)
+    logger.debug(f'{df11}')
     histogram = sb.displot(data=df11,
                            x='Дата',
                            kind='hist',
@@ -140,7 +147,7 @@ def get_visualization():
                            # col='Тип недвижимости',
                            multiple='dodge',
                            height=6,
-                           aspect=5)
+                           aspect=aspect)
     histogram.set(ylabel='Кол-во новых объявлений в день')
     # histogram.set(title='Кол-во новых объявлений по дням')
 
@@ -166,13 +173,13 @@ def get_visualization():
                      axis=0,
                      inplace=True,
                      ascending=True)
-    print(df12)
+    logger.debug(f'{df12}')
     histogram = sb.displot(data=df12,
                            x='Дата',
                            kind='hist',
                            kde=True,
                            height=6,
-                           aspect=5)
+                           aspect=aspect)
     histogram.set(ylabel='Кол-во новых объявлений в день')
     histogram.set(title='Кол-во новых объявлений по дням | Квартиры-новострой')
 
@@ -197,13 +204,13 @@ def get_visualization():
                       axis=0,
                       inplace=True,
                       ascending=True)
-    print(df12)
+    logger.debug(f'{df12}')
     histogram = sb.displot(data=df1_3,
                            x='Дата',
                            kind='hist',
                            kde=True,
                            height=6,
-                           aspect=5)
+                           aspect=aspect)
     histogram.set(ylabel='Кол-во новых объявлений в день')
     histogram.set(
         title='Кол-во новых объявлений по дням | Дома, дачи и коттеджи')
@@ -226,19 +233,19 @@ def get_visualization():
     data2 = database.get_item_date_price_area_average_union()
     df2 = pd.DataFrame(data2, columns=['Дата', 'Средняя стоимость за м2, руб.',
                                        'Тип недвижимости'])
-    print(df2)
+    logger.debug(f'{df2}')
     # df2.sort_values(by=['Дата'],
     #                 axis=0,
     #                 inplace=True,
     #                 ascending=True)
-    # print(df2)
+    # logger.debug(f'{df2}')
     av_price = sb.relplot(data=df2,
                           x='Дата',
                           y='Средняя стоимость за м2, руб.',
                           kind="line",
                           hue='Тип недвижимости',
                           height=6,
-                          aspect=5)
+                          aspect=aspect)
     av_price.set(title='Средняя стоимость квартир за м2, руб. по дням')
 
     # Shift legend to another position
@@ -290,17 +297,17 @@ def get_visualization():
     # 3. Количество новых объявлений по городам из ТОП10 ГОРОДОВ по количеству объявлений
     data3 = database.get_top10_cities('kvartiry_vtorichka')
     order_vector = data3[0]
-    print('order_vector', order_vector)
+    logger.debug(f'order_vector {order_vector}')
     df3 = pd.DataFrame(data3[1], columns=['Города'])
     df3['Города'] = pd.Categorical(df3['Города'], categories=order_vector)
-    print(df3)
+    logger.debug(f'{df3}')
 
     histogram_city = sb.displot(data=df3,
                                 x='Города',
                                 kind='hist',
                                 kde=True,
                                 height=6,
-                                aspect=5
+                                aspect=3
                                 )
     histogram_city.set(ylabel='Кол-во объявлений за все время')
     histogram_city.set(
@@ -330,14 +337,14 @@ def get_visualization():
                     inplace=True,
                     ascending=True)
 
-    print(df4)
+    logger.debug(f'{df4}')
 
     histogram_sevastopol = sb.displot(data=df4,
                                       x='Дата',
                                       kind='hist',
                                       kde=True,
                                       height=6,
-                                      aspect=5
+                                      aspect=aspect
                                       )
     histogram_sevastopol.set(ylabel='Кол-во объявлений')
     histogram_sevastopol.set(

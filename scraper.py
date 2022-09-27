@@ -149,7 +149,7 @@ def convert_date(date):
     return converted_date
 
 
-def parse_html_kvartiry_vtorichka(html):
+def parse_html_kvartiry_vtorichka(html, page):
     global vtorichka_counter
     logger.info(f'Hi from parse_html_kvartiry_vtorichka func!')
     BASE = 'https://www.avito.ru'
@@ -157,7 +157,7 @@ def parse_html_kvartiry_vtorichka(html):
     items = soup.select('div[data-marker="item"]')
     logger.debug(
         '##################################################################')
-    logger.debug(f'Number of items founded on page:  {len(items)}')
+    logger.debug(f'Number of items founded on page {page}:  {len(items)}')
     logger.debug(
         '##################################################################')
     data = {}
@@ -345,14 +345,14 @@ def parse_html_kvartiry_vtorichka(html):
     return data
 
 
-def parse_html_kvartiry_novostroyka(html):
+def parse_html_kvartiry_novostroyka(html, page):
     global novostroy_counter
     BASE = 'https://www.avito.ru'
     soup = BeautifulSoup(html, 'lxml')
     items = soup.select('div[data-marker="item"]')
     logger.debug(
         '##################################################################')
-    logger.debug(f'Number of items founded on page:  {len(items)}')
+    logger.debug(f'Number of items founded on page {page}:  {len(items)}')
     logger.debug(
         '##################################################################')
     data = {}
@@ -550,14 +550,14 @@ def parse_html_kvartiry_novostroyka(html):
     return data
 
 
-def parse_html_doma_dachi_kottedzhi(html):
+def parse_html_doma_dachi_kottedzhi(html, page):
     global doma_dachi_kottedzhi_counter
     BASE = 'https://www.avito.ru'
     soup = BeautifulSoup(html, 'lxml')
     items = soup.select('div[data-marker="item"]')
     logger.debug(
         '##################################################################')
-    logger.debug(f'Number of items founded on page:  {len(items)}')
+    logger.debug(f'Number of items founded on page {page}:  {len(items)}')
     logger.debug(
         '##################################################################')
     data = {}
