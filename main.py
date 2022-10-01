@@ -25,19 +25,21 @@ def spent_time():
 def sleep_time(max_sec):
     rand_time = randint(1, max_sec)
     time.sleep(rand_time)
+    return rand_time
 
 
 def sleep_time_minutes(max_min):
     rand_time = randint(1, max_min)
     time.sleep(rand_time * 60)
+    return rand_time
 
 
 def run_flow(URL, start_page, end_page, parse_func, write_to_db_func):
     global browsers
     # Initialize web browser
     logger.info(f'Hi from run_flow func!')
-    browser = scraper.get_firefox_browser()
-    # browser = scraper.get_chrome_browser()
+    # browser = scraper.get_firefox_browser()
+    browser = scraper.get_chrome_browser()
     browsers.append(browser)
     logger.debug(
         f'Browser for pages {URL} | {start_page}-{end_page} opened: {spent_time()}')
@@ -110,14 +112,12 @@ if __name__ == "__main__":
     logging.getLogger('matplotlib').setLevel(logging.WARNING)
 
     # Set the variables values
-    time_begin = start_time = time.time()
     url_kvartiry_vtorichka = 'https://www.avito.ru/respublika_krym/kvartiry/prodam/vtorichka-ASgBAQICAUSSA8YQAUDmBxSMUg'
     url_kvartiry_novostroyka = 'https://www.avito.ru/respublika_krym/kvartiry/prodam/novostroyka-ASgBAQICAUSSA8YQAUDmBxSOUg'
     url_doma_dachi_kottedzhi = 'https://www.avito.ru/respublika_krym/doma_dachi_kottedzhi/prodam-ASgBAgICAUSUA9AQ'
     current_page = 1
     last_page = 100
     output_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    # output_filename = f'data_store/avito_{output_timestamp}.xlsx'
     browsers = []
     # End of variables values setting
 
@@ -132,6 +132,14 @@ if __name__ == "__main__":
     write_db_doma = database.write_to_db_doma_dachi_kottedzhi
 
     logger.info('Start...')
+
+    # Delay running the program for a random number of minutes
+    # to emulate human behavior.
+    time_to_sleep = sleep_time_minutes(22)
+    logger.debug(f'Sleep for {time_to_sleep} minutes.')
+
+    time_begin = start_time = time.time()
+
     logger.info(f'Start parsing kvartiry_vtorichka')
     # Adding multithreading
 

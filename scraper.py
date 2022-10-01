@@ -7,12 +7,19 @@ from bs4 import BeautifulSoup
 import logging
 import logging.config
 
+
+from fake_useragent import UserAgent
+
 import database
+
+# from config_local import path_chromedriver, path_geckodriver, headless_mode
+from config_vps import path_chromedriver, path_geckodriver, headless_mode
 
 # Global variables
 vtorichka_counter = 0
 novostroy_counter = 0
 doma_dachi_kottedzhi_counter = 0
+user_agent = UserAgent()
 
 # Set up logging
 logging.config.fileConfig("logging.ini", disable_existing_loggers=False)
@@ -26,6 +33,7 @@ logging.getLogger('selenium.webdriver.remote.remote_connection').setLevel(
 
 
 def get_chrome_browser():
+    global user_agent
     # LOCAL
     # options = webdriver.ChromeOptions()
     # Unable to hide "Chrome is being controlled by automated software" infobar
@@ -48,12 +56,23 @@ def get_chrome_browser():
 
     # VPS
     options = webdriver.ChromeOptions()
-    options.headless = True
+    # options.headless = headless_mode
     # options.add_argument("--disable-dev-shm-usage")
+    #  Will launch browser without UI(headless)
+    options.add_argument("--headless")
     options.add_argument("--no-sandbox")
-    CHROME_PATH = '../../../../usr/bin/chromedriver'
-    # service = Service(CHROME_PATH)
-    service = Service(CHROME_PATH)
+
+    current_user_agent = user_agent.chrome
+    options.add_argument(f"--user-agent={current_user_agent}")
+    # options.add_argument(
+    #     f'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36')
+    logger.debug(f'current_user_agent: {current_user_agent}')
+
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('useAutomationExtension', False)
+
+    logger.debug(f'path_chromedriver: {path_chromedriver}')
+    service = Service(path_chromedriver)
     browser = webdriver.Chrome(service=service, options=options)
     # VPS
 
@@ -75,12 +94,13 @@ def get_chrome_browser():
 def get_firefox_browser():
     options = Options()
     #  Will launch browser without UI(headless)
-    options.headless = True
-    # FIREFOX_PATH = 'd:\\Python\\geckodriver-v0-31-0-win64\\geckodriver.exe'
-    FIREFOX_PATH = '../../../../usr/bin/geckodriver'
-    service = FirefoxService(FIREFOX_PATH)
-    browser = webdriver.Firefox(service=service, options=options,
-                                service_log_path=None)
+    options.headless = headless_mode
+    # Disable logging
+    # options.log.level = 'error'
+    # options.add_argument("disable-logging")
+    logger.debug(f'path_geckodriver: {path_geckodriver}')
+    service = FirefoxService(path_geckodriver)
+    browser = webdriver.Firefox(service=service, options=options)
     return browser
 
 

@@ -2,7 +2,8 @@ import psycopg2
 from psycopg2 import Error
 import logging.config
 import scraper
-from config import user, password, host, port, database
+# from config_local import user, password, host, port, database
+from config_vps import user, password, host, port, database
 
 # Set up logging
 logging.config.fileConfig("logging.ini", disable_existing_loggers=False)
