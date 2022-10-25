@@ -88,7 +88,7 @@ def get_max_y_value(obj):
 
 def add_events(histogram, max_y=None):
     # adding a vertical line for the defeat of the Crimean bridge
-    plt.axvline(x='2022-10-08', ymin=0.2, ymax=1, linewidth=4, color='red',
+    plt.axvline(x='2022-10-08 Sat', ymin=0.2, ymax=1, linewidth=4, color='red',
                 label='крымский мост')
 
     # adding data label to mean line
@@ -101,7 +101,7 @@ def add_events(histogram, max_y=None):
         y = get_max_y_value(histogram)
     else:
         y = max_y
-    plt.text(x='2022-10-08',
+    plt.text(x='2022-10-08 Sat',
              # x-coordinate position of data label, adjusted to be 3 right of the data point
              y=y,
              # y-coordinate position of data label, to take max height

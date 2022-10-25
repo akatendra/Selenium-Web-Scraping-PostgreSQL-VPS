@@ -133,9 +133,9 @@ def get_item_ids_list(table):
 def get_days_count(table):
     sql_get_days_count = f'''
                             SELECT Count(*)
-                            FROM   (SELECT To_char(item_date, 'YYYY-MM-DD Dy')
+                            FROM   (SELECT To_char(item_date, 'YYYY-MM-DD')
                                     FROM   kvartiry_vtorichka
-                                    GROUP  BY To_char(item_date, 'YYYY-MM-DD Dy')) AS itmd;
+                                    GROUP  BY To_char(item_date, 'YYYY-MM-DD')) AS itmd;
                           '''
     days_count = execute_sql_query(sql_get_days_count)
     logger.debug(f'days_count: {days_count}')
