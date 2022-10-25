@@ -1,8 +1,11 @@
 from datetime import datetime
 import time
+
+import request
 import scraper
 import database
 import visualisation
+import telegram
 import logging.config
 from selenium.webdriver.common.by import By
 from concurrent.futures import ThreadPoolExecutor, wait
@@ -35,12 +38,7 @@ def sleep_time_minutes(max_min):
 
 
 def run_flow(URL, start_page, end_page, parse_func, write_to_db_func):
-    global browsers
-    # Initialize web browser
     logger.info(f'Hi from run_flow func!')
-    browser = scraper.get_firefox_browser()
-    # browser = scraper.get_chrome_browser()
-    browsers.append(browser)
     logger.debug(
         f'Browser for pages {URL} | {start_page}-{end_page} opened: {spent_time()}')
     # Wait random seconds
@@ -52,7 +50,6 @@ def run_flow(URL, start_page, end_page, parse_func, write_to_db_func):
             page_url = URL
         else:
             page_url = f'{URL}?p={current_page}'
-        browser.get(page_url)
         ####################################################################
         ####################  PAGE PROCESSING  #############################
         ####################################################################
@@ -61,35 +58,21 @@ def run_flow(URL, start_page, end_page, parse_func, write_to_db_func):
         logger.debug(f'Scraping page #{current_page}...')
         logger.debug(
             '##################################################################')
-        html = browser.page_source
+        html = request.get_request(page_url)
         logger.debug(
             f'Page_source of page {current_page} received: {spent_time()}')
         output_data = parse_func(html, current_page)
         logger.debug(
             f'Output_data of page {current_page} received: {spent_time()}')
-        # xlsx.append_xlsx_file(output_data, output_filename, page_number)
         write_to_db_func(output_data)
-
-        # Go to pagination bar to simulate human behavior
-        # driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        pagination_bar = browser.find_element(By.XPATH,
-                                              '//div[@data-marker="pagination-button"]')
-        browser.execute_script("arguments[0].scrollIntoView();",
-                               pagination_bar)
-
-        current_url = browser.current_url
-        logger.debug(f'Current URL in run_process: {current_url}')
 
         ####################################################################
         current_page += 1
 
-    # Stop script
-    browser.quit()
-
 
 def thread_pool(func, url, pages, parse_func, write_to_db_func):
     futures = []
-    with ThreadPoolExecutor() as executor:
+    with ThreadPoolExecutor(max_workers=5) as executor:
         for page in pages:
             futures.append(
                 executor.submit(func, url, page[0], page[1], parse_func,
@@ -146,7 +129,9 @@ if __name__ == "__main__":
     # kvartiry_vtorichka
 
     # 6 threads
-    pages = [(1, 14), (15, 32), (33, 48), (49, 63), (64, 82), (83, 100)]
+    # pages = [(1, 14), (15, 32), (33, 48), (49, 63), (64, 82), (83, 100)]
+    # 5 threads
+    pages = [(1, 21), (22, 41), (42, 60), (61, 81), (82, 100)]
     # 4 threads
     # pages = [(1, 24), (25, 51), (52, 77), (78, 100)]
     # 1 thread
@@ -166,7 +151,9 @@ if __name__ == "__main__":
     logger.info(f'Start parsing kvartiry_novostroyka')
     pages.clear()
     # 6 threads
-    pages = [(1, 9), (10, 17), (18, 23), (24, 32), (33, 41), (42, 47)]
+    # pages = [(1, 9), (10, 17), (18, 23), (24, 32), (33, 41), (42, 47)]
+    # 5 threads
+    pages = [(1, 9), (10, 20), (21, 30), (31, 42), (42, 47)]
     # 4 threads
     # pages = [(1, 12), (13, 24), (25, 36), (37, 47)]
     # 1 thread
@@ -186,7 +173,9 @@ if __name__ == "__main__":
     logger.info(f'Start parsing doma_dachi_kottedzhi')
     pages.clear()
     # 6 threads
-    pages = [(1, 14), (15, 32), (33, 48), (49, 63), (64, 82), (83, 100)]
+    # pages = [(1, 14), (15, 32), (33, 48), (49, 63), (64, 82), (83, 100)]
+    # 5 threads
+    pages = [(1, 20), (21, 41), (42, 59), (60, 80), (81, 100)]
     # 4 threads
     # pages = [(1, 24), (25, 51), (52, 77), (78, 100)]
     # 1 thread
@@ -215,8 +204,11 @@ if __name__ == "__main__":
         elapsed_time_str = f'| {int(elapsed_minutes)} min {round(elapsed_sec, 1)} sec'
     else:
         elapsed_time_str = f'| {round(elapsed_time, 1)} sec'
-    logger.info(
-        f'Elapsed run time: {elapsed_time_str} seconds | New vtorichka items: {scraper.vtorichka_counter} | New novostroy items: {scraper.novostroy_counter} | New doma_dachi_kottedzhi items: {scraper.doma_dachi_kottedzhi_counter}')
+    message = f'Elapsed run time: {elapsed_time_str} seconds | New vtorichka items: {scraper.vtorichka_counter} | New novostroy items: {scraper.novostroy_counter} | New doma_dachi_kottedzhi items: {scraper.doma_dachi_kottedzhi_counter}'
+    logger.info(message)
+
+    # Send report to telegram
+    telegram.send_message(message)
 
     # Get visualization
     visualisation.get_visualization()

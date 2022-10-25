@@ -133,9 +133,9 @@ def get_item_ids_list(table):
 def get_days_count(table):
     sql_get_days_count = f'''
                             SELECT Count(*)
-                            FROM   (SELECT To_char(item_date, 'YYYY-MM-DD')
+                            FROM   (SELECT To_char(item_date, 'YYYY-MM-DD Dy')
                                     FROM   kvartiry_vtorichka
-                                    GROUP  BY To_char(item_date, 'YYYY-MM-DD')) AS itmd;
+                                    GROUP  BY To_char(item_date, 'YYYY-MM-DD Dy')) AS itmd;
                           '''
     days_count = execute_sql_query(sql_get_days_count)
     logger.debug(f'days_count: {days_count}')
@@ -286,12 +286,12 @@ def duplicates_check(table):
 def get_item_count_per_day(table):
     sql_get_item_count_per_day = f'''
                                  SELECT 
-                                     to_char(item_date, 'YYYY-MM-DD'), 
+                                     to_char(item_date, 'YYYY-MM-DD Dy'), 
                                      COUNT(*) 
                                  FROM 
                                     {table} 
                                  GROUP BY 
-                                    to_char(item_date, 'YYYY-MM-DD');
+                                    to_char(item_date, 'YYYY-MM-DD Dy');
                                  '''
     item_count_per_day = execute_sql_query(sql_get_item_count_per_day)
     # logger.debug(
@@ -302,7 +302,7 @@ def get_item_count_per_day(table):
 def get_item_count_per_day2(table):
     sql_get_item_count_per_day = f'''
                                  SELECT 
-                                     to_char(item_date, 'YYYY-MM-DD') 
+                                     to_char(item_date, 'YYYY-MM-DD Dy') 
                                  FROM 
                                     {table};
                                  '''
@@ -314,15 +314,15 @@ def get_item_count_per_day2(table):
 
 def get_item_count_per_day3():
     sql_get_item_count_per_day = f'''
-                                    SELECT to_char(item_date, 'YYYY-MM-DD'),
+                                    SELECT to_char(item_date, 'YYYY-MM-DD Dy'),
                                     property_type
                                     FROM kvartiry_vtorichka
                                     UNION ALL
-                                    SELECT to_char(item_date, 'YYYY-MM-DD'),
+                                    SELECT to_char(item_date, 'YYYY-MM-DD Dy'),
                                     property_type
                                     FROM kvartiry_novostroyka
                                     UNION ALL
-                                    SELECT to_char(item_date, 'YYYY-MM-DD'),
+                                    SELECT to_char(item_date, 'YYYY-MM-DD Dy'),
                                     property_type
                                     FROM doma_dachi_kottedzhi
                                  '''
@@ -335,7 +335,7 @@ def get_item_count_per_day3():
 def get_item_date_price_area(table):
     sql_get_item_date_price_area = f'''
                                  SELECT
-                                     to_char(item_date, 'YYYY-MM-DD'),
+                                     to_char(item_date, 'YYYY-MM-DD Dy'),
                                      item_price,
                                      item_area
                                  FROM 
@@ -350,12 +350,12 @@ def get_item_date_price_area(table):
 def get_item_date_price_area_average(table):
     sql_get_item_date_price_area_av = f'''
                                  SELECT
-                                     to_char(item_date, 'YYYY-MM-DD'),
+                                     to_char(item_date, 'YYYY-MM-DD Dy'),
                                     ROUND (AVG (item_price / item_area)) AS av_price_per_sq_m
                                  FROM 
                                     {table}
                                  GROUP BY 
-                                    to_char(item_date, 'YYYY-MM-DD');
+                                    to_char(item_date, 'YYYY-MM-DD Dy');
                                  '''
     item_date_price_area_av = execute_sql_query(
         sql_get_item_date_price_area_av)
@@ -366,25 +366,25 @@ def get_item_date_price_area_average(table):
 
 def get_item_date_price_area_average_union():
     sql_get_item_date_price_area_av_union = f'''
-                                            SELECT to_char(item_date, 'YYYY-MM-DD'),
+                                            SELECT to_char(item_date, 'YYYY-MM-DD Dy'),
                                                    ROUND (AVG (item_price / item_area)) AS av_price_per_sq_m,
                                                    property_type
                                             FROM kvartiry_vtorichka
-                                            GROUP BY to_char(item_date, 'YYYY-MM-DD'),
+                                            GROUP BY to_char(item_date, 'YYYY-MM-DD Dy'),
                                                      property_type
                                             UNION
-                                            SELECT to_char(item_date, 'YYYY-MM-DD'),
+                                            SELECT to_char(item_date, 'YYYY-MM-DD Dy'),
                                                    ROUND (AVG (item_price / item_area)) AS av_price_per_sq_m,
                                                    property_type
                                             FROM kvartiry_novostroyka
-                                            GROUP BY to_char(item_date, 'YYYY-MM-DD'),
+                                            GROUP BY to_char(item_date, 'YYYY-MM-DD Dy'),
                                                      property_type
                                             UNION
-                                            SELECT to_char(item_date, 'YYYY-MM-DD'),
+                                            SELECT to_char(item_date, 'YYYY-MM-DD Dy'),
                                                    ROUND (AVG (item_price / item_area)) AS av_price_per_sq_m,
                                                    property_type
                                             FROM doma_dachi_kottedzhi
-                                            GROUP BY to_char(item_date, 'YYYY-MM-DD'),
+                                            GROUP BY to_char(item_date, 'YYYY-MM-DD Dy'),
                                                    property_type
                                             ;
                                             '''
@@ -447,16 +447,16 @@ def get_top10_cities(table):
 def get_item_count_sevastopol(table):
     sql_get_item_count_sevastopol = f'''
                                  SELECT
-                                     to_char(item_date, 'YYYY-MM-DD'),
+                                     to_char(item_date, 'YYYY-MM-DD Dy'),
                                      COUNT(*)
                                  FROM 
                                     {table}
                                  WHERE
                                      item_city = 'Севастополь'
                                  GROUP BY 
-                                    to_char(item_date, 'YYYY-MM-DD')
+                                    to_char(item_date, 'YYYY-MM-DD Dy')
                                  ORDER BY
-                                     to_char(item_date, 'YYYY-MM-DD')
+                                     to_char(item_date, 'YYYY-MM-DD Dy')
                                  '''
     item_count_sevastopol = execute_sql_query(sql_get_item_count_sevastopol)
     # logger.debug(
@@ -467,13 +467,13 @@ def get_item_count_sevastopol(table):
 def get_item_count_sevastopol_simple(table):
     sql_get_item_count_sevastopol = f'''
                                  SELECT
-                                     to_char(item_date, 'YYYY-MM-DD')
+                                     to_char(item_date, 'YYYY-MM-DD Dy')
                                  FROM 
                                     {table}
                                  WHERE
                                      item_city LIKE '%Севастополь%'
                                  ORDER BY
-                                     to_char(item_date, 'YYYY-MM-DD')
+                                     to_char(item_date, 'YYYY-MM-DD Dy')
                                  '''
     item_count_sevastopol = execute_sql_query(sql_get_item_count_sevastopol)
     # logger.debug(

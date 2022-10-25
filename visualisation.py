@@ -1,5 +1,7 @@
 from datetime import timedelta, datetime
 
+import logging.config
+
 import seaborn as sb
 import pandas as pd
 import database
@@ -10,9 +12,8 @@ import database
 # Bugfix for matplotlib==3.6.0
 import matplotlib.pyplot as plt
 
-import logging.config
 
-timestamp = (datetime.now() + timedelta(hours=3)).strftime("%d-%m-%Y %H:%M:%S")
+# timestamp = (datetime.now() + timedelta(hours=3)).strftime("%d-%m-%Y %H:%M:%S")
 
 
 def cm_to_inch(value):
@@ -39,7 +40,6 @@ def show_bar_values(obj, label_type='center'):
 
 
 def put_timestamp(horizontal='left', vertical='top'):
-    global timestamp
     # Define axes
     left = 0.01
     width = 0.9
@@ -61,28 +61,68 @@ def put_timestamp(horizontal='left', vertical='top'):
         vertical_v = top
     else:
         vertical_v = bottom
-
+    timestamp = (datetime.now() + timedelta(hours=3)).strftime(
+        "%d-%m-%Y %H:%M:%S")
     # Define timestamp text
     ax.text(horizontal_v,
             vertical_v,
             timestamp,
             horizontalalignment=horizontal,
             verticalalignment=vertical,
-            color='r',
+            color='red',
             size=12,
             transform=ax.transAxes)
 
 
+def get_max_y_value(obj):
+    # y = 0
+    maximum_y = 0
+    for ax in obj.axes.ravel():
+        # add annotations
+        for bar_container in ax.containers:
+            y = max([bar.get_height() for bar in bar_container])
+            if y >= maximum_y:
+                maximum_y = y
+    return maximum_y
+
+
+def add_events(histogram, max_y=None):
+    # adding a vertical line for the defeat of the Crimean bridge
+    plt.axvline(x='2022-10-08', ymin=0.2, ymax=1, linewidth=4, color='red',
+                label='крымский мост')
+
+    # adding data label to mean line
+    # box = {'boxstyle': 'square',  # стиль области
+    #        'pad': 0.9,  # отступы
+    #        'facecolor': 'black',  # цвет области
+    #        'edgecolor': 'red'  # цвет крайней линии
+    #        }
+    if max_y is None:
+        y = get_max_y_value(histogram)
+    else:
+        y = max_y
+    plt.text(x='2022-10-08',
+             # x-coordinate position of data label, adjusted to be 3 right of the data point
+             y=y,
+             # y-coordinate position of data label, to take max height
+             s='  крымский мост',
+             # rotation=90,
+             fontsize=16,
+             # position=(2.5, 200),
+             color='red')
+
+
 def get_visualization():
     # Set up logging
-    logging.config.fileConfig("logging_visualisation.ini", disable_existing_loggers=False)
+    logging.config.fileConfig("logging_visualisation.ini",
+                              disable_existing_loggers=False)
     logger = logging.getLogger(__name__)
     # Remove matplotlib.font_manager from logging
     # logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
     # Remove all matplotlib from logging
     logging.getLogger('matplotlib').setLevel(logging.WARNING)
 
-    output_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    # output_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
     # Plot style
     sb.set_style("whitegrid",
@@ -91,11 +131,11 @@ def get_visualization():
                   })
 
     # 1. Количество новых объявлений по дням квартиры-вторичка
-    # Количество дней в БД
+    # Количество дней в БД, чтоб знать какой длины делать картинку.
     days_count = database.get_days_count('kvartiry_vtorichka')
     logger.debug(f'days_count {days_count}')
     # Aspect ratio
-    aspect = int(days_count[0][0] // 5)
+    aspect = int(days_count[0][0] // 4)
     logger.debug(f'aspect {aspect}')
 
     data1 = database.get_item_count_per_day2('kvartiry_vtorichka')
@@ -117,7 +157,7 @@ def get_visualization():
     show_bar_values(histogram)
 
     put_timestamp()
-
+    add_events(histogram)
     # Fix problem seaborn function 'displot' does not show up a part of the title
     # https://stackoverflow.com/questions/69386785/python-seaborn-function-displot-does-not-show-up-a-part-of-the-title
     plt.tight_layout()
@@ -154,6 +194,7 @@ def get_visualization():
     show_bar_values(histogram)
 
     put_timestamp()
+    add_events(histogram)
     # Fix problem seaborn function 'displot' does not show up a part of the title
     # https://stackoverflow.com/questions/69386785/python-seaborn-function-displot-does-not-show-up-a-part-of-the-title
     plt.tight_layout()
@@ -185,6 +226,7 @@ def get_visualization():
 
     show_bar_values(histogram)
     put_timestamp()
+    add_events(histogram)
     # Fix problem seaborn function 'displot' does not show up a part of the title
     # https://stackoverflow.com/questions/69386785/python-seaborn-function-displot-does-not-show-up-a-part-of-the-title
     plt.tight_layout()
@@ -217,6 +259,7 @@ def get_visualization():
 
     show_bar_values(histogram)
     put_timestamp()
+    add_events(histogram)
     # Fix problem seaborn function 'displot' does not show up a part of the title
     # https://stackoverflow.com/questions/69386785/python-seaborn-function-displot-does-not-show-up-a-part-of-the-title
     plt.tight_layout()
@@ -253,9 +296,12 @@ def get_visualization():
     legend = av_price._legend
     legend.set_bbox_to_anchor([1, 0.9])
     #  Add annotations with average price
+    max_y = 0
     for x, y, item_type in zip(df2['Дата'],
                                df2['Средняя стоимость за м2, руб.'],
                                df2['Тип недвижимости']):
+        if y >= max_y:
+            max_y = y
         # the position of the data label relative to the data point can be
         # adjusted by adding/subtracting a value from the x / y coordinates
 
@@ -281,6 +327,7 @@ def get_visualization():
                 '#1f77b4')
 
     put_timestamp()
+    add_events(av_price, max_y)
 
     # Fix problem seaborn function 'displot' does not show up a part of the title
     # https://stackoverflow.com/questions/69386785/python-seaborn-function-displot-does-not-show-up-a-part-of-the-title
@@ -311,7 +358,7 @@ def get_visualization():
                                 )
     histogram_city.set(ylabel='Кол-во объявлений за все время')
     histogram_city.set(
-        title='Количество новых объявлений по городам из ТОП10 ГОРОДОВ по количеству объявлений')
+        title='Количество новых объявлений по городам из ТОП10 ГОРОДОВ по количеству объявлений c 27-07-2022 г.')
 
     # sb.set(rc={"figure.figsize": (30, 6)}) #width=30, #height=6
     show_bar_values(histogram_city)
@@ -352,6 +399,7 @@ def get_visualization():
 
     show_bar_values(histogram_sevastopol)
     put_timestamp()
+    add_events(histogram_sevastopol)
 
     # Fix problem seaborn function 'displot' does not show up a part of the title
     # https://stackoverflow.com/questions/69386785/python-seaborn-function-displot-does-not-show-up-a-part-of-the-title
@@ -365,6 +413,7 @@ def get_visualization():
     plt.show()
 
     logger.info(f'Visualization complete!')
+
 
 if __name__ == '__main__':
     get_visualization()

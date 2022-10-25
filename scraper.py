@@ -9,7 +9,8 @@ import logging.config
 
 
 from fake_useragent import UserAgent
-
+# from selenium_stealth import stealth
+import undetected_chromedriver as uc
 import database
 
 # from config_local import path_chromedriver, path_geckodriver, headless_mode
@@ -33,7 +34,6 @@ logging.getLogger('selenium.webdriver.remote.remote_connection').setLevel(
 
 
 def get_chrome_browser():
-    global user_agent
     # LOCAL
     # options = webdriver.ChromeOptions()
     # Unable to hide "Chrome is being controlled by automated software" infobar
@@ -59,48 +59,54 @@ def get_chrome_browser():
     # options.headless = headless_mode
     # options.add_argument("--disable-dev-shm-usage")
     #  Will launch browser without UI(headless)
-    options.add_argument("--headless")
+    # options.add_argument("--headless")
     options.add_argument("--no-sandbox")
 
+    # Add fake user agent
     current_user_agent = user_agent.chrome
     options.add_argument(f"--user-agent={current_user_agent}")
     # options.add_argument(
     #     f'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36')
-    logger.debug(f'current_user_agent: {current_user_agent}')
+    # logger.debug(f'current_user_agent: {current_user_agent}')
 
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option('useAutomationExtension', False)
 
     logger.debug(f'path_chromedriver: {path_chromedriver}')
     service = Service(path_chromedriver)
-    browser = webdriver.Chrome(service=service, options=options)
+    # browser = webdriver.Chrome(service=service, options=options)
+    browser = uc.Chrome()
+    # Selenium Stealth settings
+    # stealth(browser,
+    #         languages=["en-US", "en"],
+    #         user_agent=current_user_agent,
+    #         vendor="Google Inc.",
+    #         platform="Win32",
+    #         webgl_vendor="Intel Inc.",
+    #         renderer="Intel Iris OpenGL Engine",
+    #         fix_hairline=True,
+    #         )
     # VPS
-
-    # # HEROKU Selenium Chromedriver
-    # # https://www.andressevilla.com/running-chromedriver-with-python-selenium-on-heroku/
-    #
-    # options = webdriver.ChromeOptions()
-    # options.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
-    # options.add_argument("--headless")
-    # options.add_argument("--disable-dev-shm-usage")
-    # options.add_argument("--no-sandbox")
-    # browser = webdriver.Chrome(
-    #     executable_path=os.environ.get("CHROMEDRIVER_PATH"),
-    #     chrome_options=options)
-    # # HEROKU Selenium Chromedriver
     return browser
 
 
 def get_firefox_browser():
     options = Options()
     #  Will launch browser without UI(headless)
-    options.headless = headless_mode
+    # options.headless = headless_mode
     # Disable logging
     # options.log.level = 'error'
     # options.add_argument("disable-logging")
+
+    # Add fake user agent
+    # current_user_agent = user_agent.firefox
+    current_user_agent = user_agent.random
+    profile = webdriver.FirefoxProfile()
+    profile.set_preference("general.useragent.override", current_user_agent)
+
     logger.debug(f'path_geckodriver: {path_geckodriver}')
     service = FirefoxService(path_geckodriver)
-    browser = webdriver.Firefox(service=service, options=options)
+    browser = webdriver.Firefox(firefox_profile=profile, service=service, options=options)
     return browser
 
 
