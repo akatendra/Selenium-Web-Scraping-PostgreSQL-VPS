@@ -8,6 +8,14 @@ BeautifulSoup
 
 psycopg2
 
+request
+
+seaborn
+
+pandas
+
+concurrent.futures
+
 ***
 The project is deployed on a VPS:
 
@@ -15,9 +23,7 @@ http://185.69.154.10:8099/
 
 The file main2.py is used now.
 
-It uses request library because it was easier than using Selenium. Since the site blocked parsing by IP I had to use proxy service scrapeops.io. The visualization of the site is based on aiohttp_jinja2.
-
-You can find the code here:
+It uses request library because it was easier than using Selenium. Since the site blocked parsing by IP I had to use proxy service scrapeops.io. The visualization of the site is based on aiohttp_jinja2. You can find the code here:
 
 https://github.com/akatendra/Silenium-Web-Scraping-PostgreSQL
 
