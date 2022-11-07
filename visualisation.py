@@ -86,10 +86,10 @@ def get_max_y_value(obj):
     return maximum_y
 
 
-def add_events(histogram, max_y=None):
+def event(histogram, date, text, max_y=None):
     # adding a vertical line for the defeat of the Crimean bridge
-    plt.axvline(x='2022-10-08 Sat', ymin=0.2, ymax=1, linewidth=4, color='red',
-                label='крымский мост')
+    plt.axvline(x=date, ymin=0.2, ymax=1, linewidth=4, color='red',
+                label=text)
 
     # adding data label to mean line
     # box = {'boxstyle': 'square',  # стиль области
@@ -101,15 +101,23 @@ def add_events(histogram, max_y=None):
         y = get_max_y_value(histogram)
     else:
         y = max_y
-    plt.text(x='2022-10-08 Sat',
+    plt.text(x=date,
              # x-coordinate position of data label, adjusted to be 3 right of the data point
              y=y,
              # y-coordinate position of data label, to take max height
-             s='  крымский мост',
+             s='  ' + text,
              # rotation=90,
              fontsize=16,
              # position=(2.5, 200),
              color='red')
+
+
+def add_events(histogram, max_y=None):
+    # adding a vertical line for the defeat of the Crimean bridge
+    event(histogram, '2022-10-08 Sat', 'крымский мост', max_y=max_y)
+    # Bandera Boat Attack on Sevastopol Bay
+    event(histogram, '2022-10-29 Sat',
+          'Атака бандероботами\n  на севастопольскую бухту', max_y=max_y)
 
 
 def get_visualization():

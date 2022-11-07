@@ -19,13 +19,14 @@ concurrent.futures
 ***
 The project is deployed on a VPS:
 
-http://185.69.154.10:8099/
+https://realty.crimea.ua/
 
 The file main2.py is used now.
 
-It uses request library because it was easier than using Selenium. Since the site blocked parsing by IP I had to use proxy service scrapeops.io. The visualization of the site is based on aiohttp_jinja2. You can find the code here:
+It uses request library because it was easier than using Selenium. Since the site blocked parsing by IP I had to use proxy service scrapeops.io. The visualization of the site is based on aiohttp_jinja2. Code from this Git should be in scraper folder here:
 
 https://github.com/akatendra/Silenium-Web-Scraping-PostgreSQL
+
 
 The duration of parsing 3 categories of the site averaged 60-80 minutes.
 
