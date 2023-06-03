@@ -174,6 +174,29 @@ def convert_date(date):
         converted_date = None
     return converted_date
 
+NONE_CRIMEA = (
+    '/ahtanizovskaya/',
+    '/anapa/',
+    '/anapskaya/',
+    '/dzhiginka/',
+    '/golubitskaya/',
+    '/krasnodarskiy_kray_strelka/',
+    '/sennoy/',
+    '/starotitarovskaya/',
+    '/supseh/',
+    '/taman/',
+    '/temryuk/',
+    '/tsibanobalka/',
+    '/vinogradnyy/',
+    '/vityazevo/',
+    '/vyshesteblievskaya/',
+    '/yurovka/'
+)
+def remove_none_crimea(url):
+    for item in NONE_CRIMEA:
+        if item in url:
+            return True
+    return False
 
 def parse_html_kvartiry_vtorichka(html, page):
     global vtorichka_counter
@@ -204,140 +227,147 @@ def parse_html_kvartiry_vtorichka(html, page):
                 logger.debug(
                     '##############################################################')
                 continue
-            else:
-                vtorichka_counter += 1
-                logger.debug(
-                    f'vtorichka_counter: {vtorichka_counter}')
-                logger.debug(
-                    f'Detected item_id is taken in work: {item_id}')
-                logger.debug(
-                    '^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-                data_item_id = int(item['data-item-id'])
-                logger.debug(f'data_item_id:  {data_item_id}')
-                item_a = item.select_one('a[data-marker="item-title"]')
-                logger.debug(f'item_a:  {item_a}')
-                item_url = BASE + item_a['href']
-                logger.debug(f'item_url:  {item_url}')
-                item_title = item_a.find('h3').text
-                # Intercepting and processing errors in the title
-                # of the announcement. Check is the title exist or not. There was
-                # a case where the title field was not filled in for some reason,
-                # and it caused a parsing error.
-                if item_title:
-                    logger.debug(f'item_title:  {item_title}')
-                    item_title_list = item_title.split(',')
-                    logger.debug(f'item_title_list:  {item_title_list}')
-                    # item_number_of_rooms_list = None
-                    item_number_of_rooms = None
-                    item_type = None
-                    if '-к.' in item_title_list[0]:
-                        item_number_of_rooms_list = item_title_list[0].split()
-                        logger.debug(
-                            f'item_number_of_rooms_list: {item_number_of_rooms_list}')
-                        item_number_of_rooms_list_len = len(
-                            item_number_of_rooms_list)
-                        # If the number of rooms is not specified (Апартаменты,
-                        # Апартаменты-студия, Квартира-студия, Апартаменты-студия,
-                        # Своб. планировка
-                        if item_number_of_rooms_list_len == 1:
-                            item_number_of_rooms = None
-                            item_type = item_number_of_rooms_list[0].lower()
-                        # Стандартный вариант в большинстве случаев
-                        elif item_number_of_rooms_list_len == 2:
-                            item_number_of_rooms = int(
-                                item_number_of_rooms_list[0].replace('-к.',
-                                                                     ''))
-                            item_type = item_number_of_rooms_list[1]
-                        # There was a variant when the number of rooms was preceded
-                        # by the word: Аукцион:
-                        elif item_number_of_rooms_list_len == 3:
-                            item_number_of_rooms = int(
-                                item_number_of_rooms_list[1].replace('-к.',
-                                                                     ''))
-                            item_type = item_number_of_rooms_list[2]
-                    else:
+
+            item_a = item.select_one('a[data-marker="item-title"]')
+            logger.debug(f'item_a before remove_none_crimea:  {item_a}')
+            if remove_none_crimea(item_a['href']):
+                continue
+
+            vtorichka_counter += 1
+            logger.debug(
+                f'vtorichka_counter: {vtorichka_counter}')
+            logger.debug(
+                f'Detected item_id is taken in work: {item_id}')
+            logger.debug(
+                '^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+            data_item_id = int(item['data-item-id'])
+            logger.debug(f'data_item_id:  {data_item_id}')
+
+            logger.debug(f'item_a:  {item_a}')
+            item_url = BASE + item_a['href']
+            logger.debug(f'item_url:  {item_url}')
+            item_title = item_a.find('h3').text
+            # Intercepting and processing errors in the title
+            # of the announcement. Check is the title exist or not. There was
+            # a case where the title field was not filled in for some reason,
+            # and it caused a parsing error.
+            if item_title:
+                logger.debug(f'item_title:  {item_title}')
+                item_title_list = item_title.split(',')
+                logger.debug(f'item_title_list:  {item_title_list}')
+                # item_number_of_rooms_list = None
+                item_number_of_rooms = None
+                item_type = None
+                if '-к.' in item_title_list[0]:
+                    item_number_of_rooms_list = item_title_list[0].split()
+                    logger.debug(
+                        f'item_number_of_rooms_list: {item_number_of_rooms_list}')
+                    item_number_of_rooms_list_len = len(
+                        item_number_of_rooms_list)
+                    # If the number of rooms is not specified (Апартаменты,
+                    # Апартаменты-студия, Квартира-студия, Апартаменты-студия,
+                    # Своб. планировка
+                    if item_number_of_rooms_list_len == 1:
                         item_number_of_rooms = None
-                        item_type = item_title_list[0].lower()
-                    logger.debug(
-                        f'item_number_of_rooms:  {item_number_of_rooms}')
-                    logger.debug(f'item_type:  {item_type}')
-
-                    # Getting an apartment area
-                    if len(item_title_list) > 3:
-                        item_area = float(
-                            (item_title_list[1] + '.' + item_title_list[
-                                2]).replace(
-                                '\xa0м²',
-                                ''))
-                    else:
-                        item_area = int(
-                            item_title_list[1].replace('\xa0м\xb2', ''))
-                    logger.debug(f'item_area:  {item_area}')
-
-                    # Getting the floor on which the apartment is located and the
-                    # number of floors of the building
-                    item_floor_house = item_title_list[-1].replace('\xa0эт.',
-                                                                   '').strip()
-                    logger.debug(f'item_floor_house:  {item_floor_house}')
-                    item_floor_house_list = item_floor_house.split('/')
-                    logger.debug(
-                        f'item_floor_house_list: {item_floor_house_list}')
-                    item_floor = int(item_floor_house_list[0].replace(' ', ''))
-                    logger.debug(f'item_floor:  {item_floor}')
-                    item_floors_in_house = int(
-                        item_floor_house_list[1].replace(' ', ''))
-                    logger.debug(
-                        f'item_floors_in_house:  {item_floors_in_house}')
+                        item_type = item_number_of_rooms_list[0].lower()
+                    # Стандартный вариант в большинстве случаев
+                    elif item_number_of_rooms_list_len == 2:
+                        item_number_of_rooms = int(
+                            item_number_of_rooms_list[0].replace('-к.',
+                                                                 ''))
+                        item_type = item_number_of_rooms_list[1]
+                    # There was a variant when the number of rooms was preceded
+                    # by the word: Аукцион:
+                    elif item_number_of_rooms_list_len == 3:
+                        item_number_of_rooms = int(
+                            item_number_of_rooms_list[1].replace('-к.',
+                                                                 ''))
+                        item_type = item_number_of_rooms_list[2]
                 else:
-                    item_title = None
-                    item_type = None
                     item_number_of_rooms = None
-                    item_area = None
-                    item_floor_house = None
-                    item_floor = None
-                    item_floors_in_house = None
-
-                # Getting an item price.
-                item_price_str = item.select_one(
-                    'span[class*="price-text-"]').text
-                logger.debug(f'item_price_str:  {item_price_str}')
-                item_price = int(
-                    ''.join(
-                        char for char in item_price_str if char.isdecimal()))
-                logger.debug(f'item_price:  {item_price}')
-
-                # Getting an item price currency.
-                item_currency = item.select_one(
-                    'span[class*="price-currency-"]').text
-                logger.debug(f'item_currency:  {item_currency}')
-
-                # Getting an item address.
-                item_geo_address = item.select_one(
-                    'span[class*="geo-address-"]')
-                if item_geo_address:
-                    item_address = item_geo_address.find('span').text
-                else:
-                    item_address = None
-                logger.debug(f'item_address:  {item_address}')
-
-                # Getting an item city.
-                item_geo_georeferences = item.select_one(
-                    'div[class*="geo-georeferences-"]')
-                if item_geo_georeferences:
-                    item_city = item_geo_georeferences.find('span').find(
-                        'span').text
-                else:
-                    item_city = None
-                logger.debug(f'item_city:  {item_city}')
-
-                # Getting an item publishing date.
-                item_date_data = item.select_one(
-                    'div[data-marker="item-date"]').text
-                # Convert '2 дня назад' or '5 минут назад' in normal calendar date.
-                item_date = convert_date(item_date_data)
+                    item_type = item_title_list[0].lower()
                 logger.debug(
-                    f'item_date:  {item_date.strftime("%Y-%m-%d %H:%M")}')
-                item_add_date = datetime.now()
+                    f'item_number_of_rooms:  {item_number_of_rooms}')
+                logger.debug(f'item_type:  {item_type}')
+
+                # Getting an apartment area
+                if len(item_title_list) > 3:
+                    item_area = float(
+                        (item_title_list[1] + '.' + item_title_list[
+                            2]).replace(
+                            '\xa0м²',
+                            ''))
+                else:
+                    item_area = int(
+                        item_title_list[1].replace('\xa0м\xb2', ''))
+                logger.debug(f'item_area:  {item_area}')
+
+                # Getting the floor on which the apartment is located and the
+                # number of floors of the building
+                item_floor_house = item_title_list[-1].replace('\xa0эт.',
+                                                               '').strip()
+                logger.debug(f'item_floor_house:  {item_floor_house}')
+                item_floor_house_list = item_floor_house.split('/')
+                logger.debug(
+                    f'item_floor_house_list: {item_floor_house_list}')
+                item_floor = int(item_floor_house_list[0].replace(' ', ''))
+                logger.debug(f'item_floor:  {item_floor}')
+                item_floors_in_house = int(
+                    item_floor_house_list[1].replace(' ', ''))
+                logger.debug(
+                    f'item_floors_in_house:  {item_floors_in_house}')
+            else:
+                item_title = None
+                item_type = None
+                item_number_of_rooms = None
+                item_area = None
+                item_floor_house = None
+                item_floor = None
+                item_floors_in_house = None
+
+            # Getting an item price.
+            # item_price_str = item.select_one(
+            #     'span[class*="price-text-"]').text
+            item_price_str = item.select_one('meta[itemprop="price"]') # 24-05-2023 Исправление после смены форматирования
+            logger.debug(f'item_price_str:  {item_price_str}')
+            # item_price = int(
+            #     ''.join(
+            #         char for char in item_price_str if char.isdecimal()))
+            item_price = item_price_str.get('content') if item_price_str else None # 24-05-2023 Исправление после смены форматирования
+            logger.debug(f'item_price:  {item_price}')
+
+            # Getting an item price currency.
+            # item_currency = item.select_one(
+            #     'span[class*="price-currency-"]').text
+            item_currency = item.select_one('meta[itemprop="priceCurrency"]').get('content') # 24-05-2023 Исправление после смены форматирования
+            logger.debug(f'item_currency:  {item_currency}')
+
+            # Getting an item address.
+            item_geo_address = item.select_one(
+                'span[class*="geo-address-"]')
+            if item_geo_address:
+                item_address = item_geo_address.find('span').text
+            else:
+                item_address = None
+            logger.debug(f'item_address:  {item_address}')
+
+            # Getting an item city.
+            item_geo_georeferences = item.select_one(
+                'div[class*="geo-georeferences-"]')
+            if item_geo_georeferences:
+                item_city = item_geo_georeferences.find('span').find(
+                    'span').text
+            else:
+                item_city = None
+            logger.debug(f'item_city:  {item_city}')
+
+            # Getting an item publishing date.
+            item_date_data = item.select_one('p[data-marker="item-date"]').text  # 24-05-2023 Исправление после смены форматирования
+            # Convert '2 дня назад' or '5 минут назад' in normal calendar date.
+            item_date = convert_date(item_date_data)
+            logger.debug(
+                f'item_date:  {item_date.strftime("%Y-%m-%d %H:%M")}')
+            item_add_date = datetime.now()
         except Exception as err:
             logging.exception('Exception occurred during parsing!')
             continue
@@ -399,149 +429,161 @@ def parse_html_kvartiry_novostroyka(html, page):
                 logger.debug(
                     '##############################################################')
                 continue
-            else:
-                novostroy_counter += 1
-                logger.debug(
-                    f'novostroy_counter: {novostroy_counter}')
-                logger.debug(
-                    f'Detected item_id is taken in work: {item_id}')
-                logger.debug(
-                    '^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-                data_item_id = int(item['data-item-id'])
-                logger.debug(f'data_item_id:  {data_item_id}')
-                item_a = item.select_one('a[data-marker="item-title"]')
-                logger.debug(f'item_a:  {item_a}')
-                item_url = BASE + item_a['href']
-                logger.debug(f'item_url:  {item_url}')
-                item_title = item_a.find('h3').text
-                # Intercepting and processing errors in the title
-                # of the announcement. Check is the title exist or not. There was
-                # a case where the title field was not filled in for some reason,
-                # and it caused a parsing error.
-                if item_title:
-                    logger.debug(f'item_title:  {item_title}')
-                    item_title_list = item_title.split(',')
-                    logger.debug(f'item_title_list:  {item_title_list}')
-                    # item_number_of_rooms_list = None
-                    item_number_of_rooms = None
-                    item_type = None
-                    if '-к.' in item_title_list[0]:
-                        item_number_of_rooms_list = item_title_list[0].split()
-                        logger.debug(
-                            f'item_number_of_rooms_list: {item_number_of_rooms_list}')
-                        item_number_of_rooms_list_len = len(
-                            item_number_of_rooms_list)
-                        # If the number of rooms is not specified (Апартаменты,
-                        # Апартаменты-студия, Квартира-студия, Апартаменты-студия,
-                        # Своб. планировка
-                        if item_number_of_rooms_list_len == 1:
-                            item_number_of_rooms = None
-                            item_type = item_number_of_rooms_list[0].lower()
-                        # Стандартный вариант в большинстве случаев
-                        elif item_number_of_rooms_list_len == 2:
-                            item_number_of_rooms = int(
-                                item_number_of_rooms_list[0].replace('-к.',
-                                                                     ''))
-                            item_type = item_number_of_rooms_list[1]
-                        # There was a variant when the number of rooms was preceded
-                        # by the word: Аукцион:
-                        elif item_number_of_rooms_list_len == 3:
-                            item_number_of_rooms = int(
-                                item_number_of_rooms_list[1].replace('-к.',
-                                                                     ''))
-                            item_type = item_number_of_rooms_list[2]
-                    else:
+
+            item_a = item.select_one('a[data-marker="item-title"]')
+            logger.debug(f'item_a before remove_none_crimea:  {item_a}')
+            if remove_none_crimea(item_a['href']):
+                continue
+
+            novostroy_counter += 1
+            logger.debug(
+                f'novostroy_counter: {novostroy_counter}')
+            logger.debug(
+                f'Detected item_id is taken in work: {item_id}')
+            logger.debug(
+                '^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+            data_item_id = int(item['data-item-id'])
+            logger.debug(f'data_item_id:  {data_item_id}')
+
+            logger.debug(f'item_a:  {item_a}')
+            item_url = BASE + item_a['href']
+            logger.debug(f'item_url:  {item_url}')
+            item_title = item_a.find('h3').text
+            # Intercepting and processing errors in the title
+            # of the announcement. Check is the title exist or not. There was
+            # a case where the title field was not filled in for some reason,
+            # and it caused a parsing error.
+            if item_title:
+                logger.debug(f'item_title:  {item_title}')
+                item_title_list = item_title.split(',')
+                logger.debug(f'item_title_list:  {item_title_list}')
+                # item_number_of_rooms_list = None
+                item_number_of_rooms = None
+                item_type = None
+                if '-к.' in item_title_list[0]:
+                    item_number_of_rooms_list = item_title_list[0].split()
+                    logger.debug(
+                        f'item_number_of_rooms_list: {item_number_of_rooms_list}')
+                    item_number_of_rooms_list_len = len(
+                        item_number_of_rooms_list)
+                    # If the number of rooms is not specified (Апартаменты,
+                    # Апартаменты-студия, Квартира-студия, Апартаменты-студия,
+                    # Своб. планировка
+                    if item_number_of_rooms_list_len == 1:
                         item_number_of_rooms = None
-                        item_type = item_title_list[0].lower()
-                    logger.debug(
-                        f'item_number_of_rooms:  {item_number_of_rooms}')
-                    logger.debug(f'item_type:  {item_type}')
-
-                    # Getting an apartment area
-                    if len(item_title_list) > 3:
-                        item_area = float(
-                            (item_title_list[1] + '.' + item_title_list[
-                                2]).replace(
-                                '\xa0м²',
-                                ''))
-                    else:
-                        item_area = int(
-                            item_title_list[1].replace('\xa0м\xb2', ''))
-                    logger.debug(f'item_area:  {item_area}')
-
-                    # Getting the floor on which the apartment is located and the
-                    # number of floors of the building
-                    item_floor_house = item_title_list[-1].replace('\xa0эт.',
-                                                                   '').strip()
-                    logger.debug(f'item_floor_house:  {item_floor_house}')
-                    item_floor_house_list = item_floor_house.split('/')
-                    logger.debug(
-                        f'item_floor_house_list: {item_floor_house_list}')
-                    item_floor = int(item_floor_house_list[0].replace(' ', ''))
-                    logger.debug(f'item_floor:  {item_floor}')
-                    item_floors_in_house = int(
-                        item_floor_house_list[1].replace(' ', ''))
-                    logger.debug(
-                        f'item_floors_in_house:  {item_floors_in_house}')
+                        item_type = item_number_of_rooms_list[0].lower()
+                    # Стандартный вариант в большинстве случаев
+                    elif item_number_of_rooms_list_len == 2:
+                        item_number_of_rooms = int(
+                            item_number_of_rooms_list[0].replace('-к.',
+                                                                 ''))
+                        item_type = item_number_of_rooms_list[1]
+                    # There was a variant when the number of rooms was preceded
+                    # by the word: Аукцион:
+                    elif item_number_of_rooms_list_len == 3:
+                        item_number_of_rooms = int(
+                            item_number_of_rooms_list[1].replace('-к.',
+                                                                 ''))
+                        item_type = item_number_of_rooms_list[2]
                 else:
-                    item_title = None
-                    item_type = None
                     item_number_of_rooms = None
-                    item_area = None
-                    item_floor_house = None
-                    item_floor = None
-                    item_floors_in_house = None
-
-                # Getting an item price.
-                item_price_str = item.select_one(
-                    'span[class*="price-text-"]').text
-                logger.debug(f'item_price_str:  {item_price_str}')
-                item_price = int(
-                    ''.join(
-                        char for char in item_price_str if char.isdecimal()))
-                logger.debug(f'item_price:  {item_price}')
-
-                # Getting an item price currency.
-                item_currency = item.select_one(
-                    'span[class*="price-currency-"]').text
-                logger.debug(f'item_currency:  {item_currency}')
-
-                # Getting a builder's name.
-                item_development_name_obj = item.select_one(
-                    'div[data-marker="item-development-name"]')
-                if item_development_name_obj:
-                    item_development_name = item_development_name_obj.text
-                else:
-                    item_development_name = None
+                    item_type = item_title_list[0].lower()
                 logger.debug(
-                    f'item_development_name:  {item_development_name}')
-                # Getting an item address.
-                item_geo_address = item.select_one(
-                    'span[class*="geo-address-"]')
-                if item_geo_address:
-                    item_address = item_geo_address.find('span').text
-                else:
-                    item_address = None
-                logger.debug(f'item_address:  {item_address}')
+                    f'item_number_of_rooms:  {item_number_of_rooms}')
+                logger.debug(f'item_type:  {item_type}')
 
-                # Getting an item city.
-                item_geo_georeferences = item.select_one(
-                    'div[class*="geo-georeferences-"]')
-                if item_geo_georeferences:
-                    item_city = item_geo_georeferences.find('span').find(
-                        'span').text
+                # Getting an apartment area
+                if len(item_title_list) > 3:
+                    item_area = float(
+                        (item_title_list[1] + '.' + item_title_list[
+                            2]).replace(
+                            '\xa0м²',
+                            ''))
                 else:
-                    item_city = None
-                logger.debug(f'item_city:  {item_city}')
+                    item_area = int(
+                        item_title_list[1].replace('\xa0м\xb2', ''))
+                logger.debug(f'item_area:  {item_area}')
 
-                # Getting an item publishing date.
-                item_date_data = item.select_one(
-                    'div[data-marker="item-date"]').text
-                # Convert '2 дня назад' or '5 минут назад' in normal calendar date.
-                item_date = convert_date(item_date_data)
+                # Getting the floor on which the apartment is located and the
+                # number of floors of the building
+                item_floor_house = item_title_list[-1].replace('\xa0эт.',
+                                                               '').strip()
+                logger.debug(f'item_floor_house:  {item_floor_house}')
+                item_floor_house_list = item_floor_house.split('/')
                 logger.debug(
-                    f'item_date:  {item_date.strftime("%Y-%m-%d %H:%M")}')
-                item_add_date = datetime.now()
+                    f'item_floor_house_list: {item_floor_house_list}')
+                item_floor = int(item_floor_house_list[0].replace(' ', ''))
+                logger.debug(f'item_floor:  {item_floor}')
+                item_floors_in_house = int(
+                    item_floor_house_list[1].replace(' ', ''))
+                logger.debug(
+                    f'item_floors_in_house:  {item_floors_in_house}')
+            else:
+                item_title = None
+                item_type = None
+                item_number_of_rooms = None
+                item_area = None
+                item_floor_house = None
+                item_floor = None
+                item_floors_in_house = None
+
+            # Getting an item price.
+            # item_price_str = item.select_one(
+            #     'span[class*="price-text-"]').text
+            item_price_str = item.select_one(
+                'meta[itemprop="price"]')  # 24-05-2023 Исправление после смены форматирования
+            logger.debug(f'item_price_str:  {item_price_str}')
+            # item_price = int(
+            #     ''.join(
+            #         char for char in item_price_str if char.isdecimal()))
+            item_price = item_price_str.get(
+                'content') if item_price_str else None  # 24-05-2023 Исправление после смены форматирования
+            logger.debug(f'item_price:  {item_price}')
+
+            # Getting an item price currency.
+            # item_currency = item.select_one(
+            #     'span[class*="price-currency-"]').text
+            item_currency = item.select_one(
+                'meta[itemprop="priceCurrency"]').get(
+                'content')  # 24-05-2023 Исправление после смены форматирования
+            logger.debug(f'item_currency:  {item_currency}')
+
+            # Getting a builder's name.
+            item_development_name_obj = item.select_one(
+                'div[data-marker="item-development-name"]')
+            if item_development_name_obj:
+                item_development_name = item_development_name_obj.text
+            else:
+                item_development_name = None
+            logger.debug(
+                f'item_development_name:  {item_development_name}')
+            # Getting an item address.
+            item_geo_address = item.select_one(
+                'span[class*="geo-address-"]')
+            if item_geo_address:
+                item_address = item_geo_address.find('span').text
+            else:
+                item_address = None
+            logger.debug(f'item_address:  {item_address}')
+
+            # Getting an item city.
+            item_geo_georeferences = item.select_one(
+                'div[class*="geo-georeferences-"]')
+            if item_geo_georeferences:
+                item_city = item_geo_georeferences.find('span').find(
+                    'span').text
+            else:
+                item_city = None
+            logger.debug(f'item_city:  {item_city}')
+
+            # Getting an item publishing date.
+            item_date_data = item.select_one(
+                'p[data-marker="item-date"]').text  # 24-05-2023 Исправление после смены форматирования
+            # Convert '2 дня назад' or '5 минут назад' in normal calendar date.
+            item_date = convert_date(item_date_data)
+            logger.debug(
+                f'item_date:  {item_date.strftime("%Y-%m-%d %H:%M")}')
+            item_add_date = datetime.now()
         except Exception as err:
             logging.exception('Exception occurred during parsing!')
             continue
@@ -604,101 +646,113 @@ def parse_html_doma_dachi_kottedzhi(html, page):
                 logger.debug(
                     '##############################################################')
                 continue
-            else:
-                doma_dachi_kottedzhi_counter += 1
-                logger.debug(
-                    f'doma_dachi_kottedzhi_counter: {doma_dachi_kottedzhi_counter}')
-                logger.debug(
-                    f'Detected item_id is taken in work: {item_id}')
-                logger.debug(
-                    '^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-                data_item_id = int(item['data-item-id'])
-                logger.debug(f'data_item_id:  {data_item_id}')
-                item_a = item.select_one('a[data-marker="item-title"]')
-                logger.debug(f'item_a:  {item_a}')
-                item_url = BASE + item_a['href']
-                logger.debug(f'item_url:  {item_url}')
-                item_title = item_a.find('h3').text
-                # Intercepting and processing errors in the title
-                # of the announcement. Check is the title exist or not. There was
-                # a case where the title field was not filled in for some reason,
-                # and it caused a parsing error.
-                if item_title:
-                    logger.debug(f'item_title:  {item_title}')
-                    if '\xa0' in item_title:
-                        item_title = item_title.replace('\xa0', ' ')
-                    item_title_list = item_title.split(' ')
-                    logger.debug(f'item_title_list:  {item_title_list}')
-                    item_type = None
-                    item_land_area = None
-                    item_area = None
-                    if item_title_list[0]:
-                        item_type = item_title_list[0].lower()
-                        logger.debug(
-                            f'item_type: {item_type}')
-                    # Getting a house area
-                    if item_title_list[1]:
-                        if ',' in item_title_list[1]:
-                            item_area = float(
-                                item_title_list[1].replace(',', '.'))
-                        else:
-                            item_area = int(item_title_list[1])
-                    logger.debug(f'item_area:  {item_area}')
-                    if item_title_list[5]:
-                        if ',' in item_title_list[5]:
-                            item_land_area = float(
-                                item_title_list[5].replace(',', '.'))
-                        else:
-                            item_land_area = int(item_title_list[5])
-                else:
-                    item_title = None
-                    item_type = None
-                    item_area = None
-                    item_land_area = None
 
-                # Getting an item price.
-                item_price_str = item.select_one(
-                    'span[class*="price-text-"]').text
-                logger.debug(f'item_price_str:  {item_price_str}')
-                item_price = int(
-                    ''.join(
-                        char for char in item_price_str if char.isdecimal()))
-                logger.debug(f'item_price:  {item_price}')
+            item_a = item.select_one('a[data-marker="item-title"]')
+            logger.debug(f'item_a before remove_none_crimea:  {item_a}')
+            if remove_none_crimea(item_a['href']):
+                continue
 
-                # Getting an item price currency.
-                item_currency = item.select_one(
-                    'span[class*="price-currency-"]').text
-                logger.debug(f'item_currency:  {item_currency}')
+            doma_dachi_kottedzhi_counter += 1
+            logger.debug(
+                f'doma_dachi_kottedzhi_counter: {doma_dachi_kottedzhi_counter}')
+            logger.debug(
+                f'Detected item_id is taken in work: {item_id}')
+            logger.debug(
+                '^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+            data_item_id = int(item['data-item-id'])
+            logger.debug(f'data_item_id:  {data_item_id}')
 
-                item_city = None
-                item_address = None
-                # Getting an item address.
-                item_geo_address = item.select_one(
-                    'span[class*="geo-address-"]')
-                logger.debug(f'item_geo_address:  {item_geo_address}')
-                if item_geo_address:
-                    item_address_text = item_geo_address.find('span').text
-                    logger.debug(f'item_address_text:  {item_address_text}')
-
-                    # Getting an item city.
-                    if ',' in item_address_text:
-                        item_address_text_list = item_address_text.split(',')
-                        item_city = item_address_text_list[0]
-                        item_address = item_address_text_list[1].strip()
+            logger.debug(f'item_a:  {item_a}')
+            item_url = BASE + item_a['href']
+            logger.debug(f'item_url:  {item_url}')
+            item_title = item_a.find('h3').text
+            # Intercepting and processing errors in the title
+            # of the announcement. Check is the title exist or not. There was
+            # a case where the title field was not filled in for some reason,
+            # and it caused a parsing error.
+            if item_title:
+                logger.debug(f'item_title:  {item_title}')
+                if '\xa0' in item_title:
+                    item_title = item_title.replace('\xa0', ' ')
+                item_title_list = item_title.split(' ')
+                logger.debug(f'item_title_list:  {item_title_list}')
+                item_type = None
+                item_land_area = None
+                item_area = None
+                if item_title_list[0]:
+                    item_type = item_title_list[0].lower()
+                    logger.debug(
+                        f'item_type: {item_type}')
+                # Getting a house area
+                if item_title_list[1]:
+                    if ',' in item_title_list[1]:
+                        item_area = float(
+                            item_title_list[1].replace(',', '.'))
                     else:
-                        item_city = item_address_text
-                        item_address = None
-                logger.debug(f'item_city:  {item_city}')
-                logger.debug(f'item_address:  {item_address}')
+                        item_area = int(item_title_list[1])
+                logger.debug(f'item_area:  {item_area}')
+                if item_title_list[5]:
+                    if ',' in item_title_list[5]:
+                        item_land_area = float(
+                            item_title_list[5].replace(',', '.'))
+                    else:
+                        item_land_area = int(item_title_list[5])
+            else:
+                item_title = None
+                item_type = None
+                item_area = None
+                item_land_area = None
 
-                # Getting an item publishing date.
-                item_date_data = item.select_one(
-                    'div[data-marker="item-date"]').text
-                # Convert '2 дня назад' or '5 минут назад' in normal calendar date.
-                item_date = convert_date(item_date_data)
-                logger.debug(
-                    f'item_date:  {item_date.strftime("%Y-%m-%d %H:%M")}')
-                item_add_date = datetime.now()
+            # Getting an item price.
+            # item_price_str = item.select_one(
+            #     'span[class*="price-text-"]').text
+            item_price_str = item.select_one(
+                'meta[itemprop="price"]')  # 24-05-2023 Исправление после смены форматирования
+            logger.debug(f'item_price_str:  {item_price_str}')
+            # item_price = int(
+            #     ''.join(
+            #         char for char in item_price_str if char.isdecimal()))
+            item_price = item_price_str.get(
+                'content') if item_price_str else None  # 24-05-2023 Исправление после смены форматирования
+            logger.debug(f'item_price:  {item_price}')
+
+            # Getting an item price currency.
+            # item_currency = item.select_one(
+            #     'span[class*="price-currency-"]').text
+            item_currency = item.select_one(
+                'meta[itemprop="priceCurrency"]').get(
+                'content')  # 24-05-2023 Исправление после смены форматирования
+            logger.debug(f'item_currency:  {item_currency}')
+
+            item_city = None
+            item_address = None
+            # Getting an item address.
+            item_geo_address = item.select_one(
+                'span[class*="geo-address-"]')
+            logger.debug(f'item_geo_address:  {item_geo_address}')
+            if item_geo_address:
+                item_address_text = item_geo_address.find('span').text
+                logger.debug(f'item_address_text:  {item_address_text}')
+
+                # Getting an item city.
+                if ',' in item_address_text:
+                    item_address_text_list = item_address_text.split(',')
+                    item_city = item_address_text_list[0]
+                    item_address = item_address_text_list[1].strip()
+                else:
+                    item_city = item_address_text
+                    item_address = None
+            logger.debug(f'item_city:  {item_city}')
+            logger.debug(f'item_address:  {item_address}')
+
+            # Getting an item publishing date.
+            item_date_data = item.select_one(
+                'p[data-marker="item-date"]').text  # 24-05-2023 Исправление после смены форматирования
+            # Convert '2 дня назад' or '5 минут назад' in normal calendar date.
+            item_date = convert_date(item_date_data)
+            logger.debug(
+                f'item_date:  {item_date.strftime("%Y-%m-%d %H:%M")}')
+            item_add_date = datetime.now()
         except Exception as err:
             logging.exception('Exception occurred during parsing!')
             continue

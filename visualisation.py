@@ -61,7 +61,7 @@ def put_timestamp(horizontal='left', vertical='top'):
         vertical_v = top
     else:
         vertical_v = bottom
-    timestamp = (datetime.now() + timedelta(hours=3)).strftime(
+    timestamp = (datetime.now() + timedelta(hours=2)).strftime(
         "%d-%m-%Y %H:%M:%S")
     # Define timestamp text
     ax.text(horizontal_v,
@@ -113,11 +113,62 @@ def event(histogram, date, text, max_y=None):
 
 
 def add_events(histogram, max_y=None):
-    # adding a vertical line for the defeat of the Crimean bridge
-    event(histogram, '2022-10-08 Sat', 'крымский мост', max_y=max_y)
+    # Defeat of the Crimean bridge
+    event(histogram, '2022-10-08 Sat', 'крымский мост\n  сказал "мяу"',
+          max_y=max_y)
+    event(histogram, '2022-10-10 Mon', 'Ракетная атака\n по Украине\n 10-11 октября\n 111 ракет',
+          max_y=max_y)
+    event(histogram, '2022-10-17 Mon',
+          'Ракетная атака\n по Украине\n 17-22 октября\n 49 ракет',
+          max_y=max_y)
     # Bandera Boat Attack on Sevastopol Bay
     event(histogram, '2022-10-29 Sat',
-          'Атака бандероботами\n  на севастопольскую бухту', max_y=max_y)
+          'атака\n бандероботами\n на севастопольскую\n бухту', max_y=max_y)
+    event(histogram, '2022-10-31 Mon',
+          'Ракетная атака\n по Украине\n 50 ракет',
+          max_y=max_y)
+    event(histogram, '2022-11-09 Wed',
+          'шойгу приказал\n оставить Херсон\n строительство\n  укреплений\n на въезде в Крым',
+          max_y=max_y)
+    event(histogram, '2022-11-11 Fri',
+          'ЗСУ звільнили\n  Херсон', max_y=max_y)
+    event(histogram, '2022-11-15 Tue',
+          'Массированная\n ракетная атака\n по Украине\n 15-17 ноября\n 120 ракет\n Попали ракетами\n в Польшу',
+          max_y=max_y)
+    event(histogram, '2022-11-23 Wed',
+          'Ракетная атака\n по инфраструктуре\n Украины\n 70 ракет\n блэкаут', max_y=max_y)
+    event(histogram, '2022-12-05 Mon',
+          'Ракетная атака\n по инфраструктуре\n Украины\n 70 ракет', max_y=max_y)
+    event(histogram, '2022-12-16 Fri',
+          'Ракетная атака\n по инфраструктуре\n Украины\n 76 ракет',
+          max_y=max_y)
+    event(histogram, '2022-12-20 Tue',
+          'Сервер\n остановился', max_y=max_y)
+    event(histogram, '2022-12-23 Fri',
+          'Сервер\n перезапущен', max_y=max_y)
+    event(histogram, '2022-12-29 Thu',
+          'Ракетная атака\n по инфраструктуре\n Украины\n 29-31 декабря\n 89 ракет', max_y=max_y)
+    event(histogram, '2023-01-14 Sat',
+          'Ракетная атака\n по инфраструктуре\n Украины\n 38 ракет',
+          max_y=max_y)
+    event(histogram, '2023-01-26 Thu',
+          'Ракетная атака\n по инфраструктуре\n Украины\n 55 ракет',
+          max_y=max_y)
+    event(histogram, '2023-02-10 Fri',
+          'Ракетная атака\n по инфраструктуре\n Украины\n 71 ракета',
+          max_y=max_y)
+    event(histogram, '2023-03-09 Thu',
+          'Ракетная атака\n по инфраструктуре\n Украины\n 81 ракета',
+          max_y=max_y)
+    event(histogram, '2023-04-24 Mon',
+          'Атака надводными\n дронами по\n Севастополю',
+          max_y=max_y)
+    event(histogram, '2023-04-29 Sat',
+          'Пожар на нефтебазе\n в Казачьей бухте Севастополя\n после удара дроном',
+          max_y=max_y)
+    event(histogram, '2023-05-03 Wed',
+          'Атака дронами\n по кремлю',
+          max_y=max_y)
 
 
 def get_visualization():
