@@ -61,7 +61,7 @@ def put_timestamp(horizontal='left', vertical='top'):
         vertical_v = top
     else:
         vertical_v = bottom
-    timestamp = (datetime.now() + timedelta(hours=2)).strftime(
+    timestamp = (datetime.now() + timedelta(hours=3)).strftime(
         "%d-%m-%Y %H:%M:%S")
     # Define timestamp text
     ax.text(horizontal_v,
@@ -166,38 +166,23 @@ def add_events(histogram, max_y=None):
     event(histogram, '2023-04-29 Sat',
           'Пожар на нефтебазе\n в Казачьей бухте Севастополя\n после удара дроном',
           max_y=max_y)
-    event(histogram, '2023-05-03 Wed',
-          'Атака дронами\n по кремлю',
-          max_y=max_y)
+    event(histogram, '2023-05-03 Wed', 'Атака дронами\n по кремлю', max_y=max_y)
 
 
-def get_visualization():
-    # Set up logging
-    logging.config.fileConfig("logging_visualisation.ini",
-                              disable_existing_loggers=False)
-    logger = logging.getLogger(__name__)
-    # Remove matplotlib.font_manager from logging
-    # logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
-    # Remove all matplotlib from logging
-    logging.getLogger('matplotlib').setLevel(logging.WARNING)
+def add_events_2(histogram, max_y=None):
+    event(histogram, '2023-06-06 Tue', 'Взорвана\n Каховская ГЭС', max_y=max_y)
 
-    # output_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    # Plot style
-    sb.set_style("whitegrid",
-                 {"grid.color": ".6",
-                  "grid.linestyle": ":"
-                  })
-
+def kvartiry_vtorichka_split_visualization(date_start, date_end, file_name, event=1, max_y=None):
     # 1. Количество новых объявлений по дням квартиры-вторичка
     # Количество дней в БД, чтоб знать какой длины делать картинку.
-    days_count = database.get_days_count('kvartiry_vtorichka')
-    logger.debug(f'days_count {days_count}')
+    days_count = database.get_days_count_4_period('kvartiry_vtorichka', date_start, date_end)
+
     # Aspect ratio
     aspect = int(days_count[0][0] // 4)
     logger.debug(f'aspect {aspect}')
 
-    data1 = database.get_item_count_per_day2('kvartiry_vtorichka')
+    data1 = database.get_item_count_per_day2_4_period('kvartiry_vtorichka', date_start, date_end)
     df1 = pd.DataFrame(data1, columns=['Дата'])
     df1.sort_values(by=['Дата'],
                     axis=0,
@@ -212,11 +197,16 @@ def get_visualization():
                            aspect=aspect)
     histogram.set(ylabel='Кол-во новых объявлений в день')
     histogram.set(title='Кол-во новых объявлений по дням | Квартиры-вторичка')
+    if max_y is not None:
+        histogram.set(ylim=(0, max_y))
 
     show_bar_values(histogram)
 
     put_timestamp()
-    add_events(histogram)
+    if event == 1:
+        add_events(histogram)
+    else:
+        add_events_2(histogram, max_y=max_y)
     # Fix problem seaborn function 'displot' does not show up a part of the title
     # https://stackoverflow.com/questions/69386785/python-seaborn-function-displot-does-not-show-up-a-part-of-the-title
     plt.tight_layout()
@@ -224,50 +214,20 @@ def get_visualization():
     # Fix problem Saving a figure after invoking pyplot.show() results in an empty file
     # https://stackoverflow.com/questions/21875356/saving-a-figure-after-invoking-pyplot-show-results-in-an-empty-file
     fig = plt.gcf()
-    fig.savefig(f'image_out/histogram_vtorichka.png',
-                format='png', dpi=72)
+    fig.savefig(f'image_out/{file_name}.png', format='png', dpi=72)
 
     plt.show()
 
-    # 1.1 Количество новых объявлений по дням вся недвижимость наложение одного на другое
-    data11 = database.get_item_count_per_day3()
-    df11 = pd.DataFrame(data11, columns=['Дата', 'Тип недвижимости'])
-    # Ordering
-    df11.sort_values(by=['Дата'],
-                     axis=0,
-                     inplace=True,
-                     ascending=True)
-    logger.debug(f'{df11}')
-    histogram = sb.displot(data=df11,
-                           x='Дата',
-                           kind='hist',
-                           kde=True,
-                           hue='Тип недвижимости',
-                           # col='Тип недвижимости',
-                           multiple='dodge',
-                           height=6,
-                           aspect=aspect)
-    histogram.set(ylabel='Кол-во новых объявлений в день')
-    # histogram.set(title='Кол-во новых объявлений по дням')
-
-    show_bar_values(histogram)
-
-    put_timestamp()
-    add_events(histogram)
-    # Fix problem seaborn function 'displot' does not show up a part of the title
-    # https://stackoverflow.com/questions/69386785/python-seaborn-function-displot-does-not-show-up-a-part-of-the-title
-    plt.tight_layout()
-
-    # Fix problem Saving a figure after invoking pyplot.show() results in an empty file
-    # https://stackoverflow.com/questions/21875356/saving-a-figure-after-invoking-pyplot-show-results-in-an-empty-file
-    fig = plt.gcf()
-    fig.savefig(f'image_out/histogram_vtorichka_novostroy.png',
-                format='png', dpi=72)
-
-    plt.show()
-
+def kvartiry_novostroyka_split_visualization(date_start, date_end, file_name, event=1, max_y=None):
     # 1.2 Количество новых объявлений по дням квартиры-новострой
-    data12 = database.get_item_count_per_day2('kvartiry_novostroyka')
+    # Количество дней в БД, чтоб знать какой длины делать картинку.
+    days_count = database.get_days_count_4_period('kvartiry_novostroyka', date_start, date_end)
+
+    # Aspect ratio
+    aspect = int(days_count[0][0] // 4)
+    logger.debug(f'aspect {aspect}')
+
+    data12 = database.get_item_count_per_day2_4_period('kvartiry_novostroyka', date_start, date_end)
     df12 = pd.DataFrame(data12, columns=['Дата'])
     df12.sort_values(by=['Дата'],
                      axis=0,
@@ -282,10 +242,15 @@ def get_visualization():
                            aspect=aspect)
     histogram.set(ylabel='Кол-во новых объявлений в день')
     histogram.set(title='Кол-во новых объявлений по дням | Квартиры-новострой')
+    if max_y is not None:
+        histogram.set(ylim=(0, max_y))
 
     show_bar_values(histogram)
     put_timestamp()
-    add_events(histogram)
+    if event == 1:
+        add_events(histogram)
+    else:
+        add_events_2(histogram, max_y=max_y)
     # Fix problem seaborn function 'displot' does not show up a part of the title
     # https://stackoverflow.com/questions/69386785/python-seaborn-function-displot-does-not-show-up-a-part-of-the-title
     plt.tight_layout()
@@ -293,19 +258,26 @@ def get_visualization():
     # Fix problem Saving a figure after invoking pyplot.show() results in an empty file
     # https://stackoverflow.com/questions/21875356/saving-a-figure-after-invoking-pyplot-show-results-in-an-empty-file
     fig = plt.gcf()
-    fig.savefig(f'image_out/histogram_novostroy.png',
-                format='png', dpi=72)
+    fig.savefig(f'image_out/{file_name}.png', format='png', dpi=72)
 
     plt.show()
 
+def doma_dachi_kottedzhi_split_visualization(date_start, date_end, file_name, event=1, max_y=None):
     # 1.3 Количество новых объявлений по дням дома, дачи и коттеджи
-    data1_3 = database.get_item_count_per_day2('doma_dachi_kottedzhi')
+    # Количество дней в БД, чтоб знать какой длины делать картинку.
+    days_count = database.get_days_count_4_period('doma_dachi_kottedzhi', date_start, date_end)
+
+    # Aspect ratio
+    aspect = int(days_count[0][0] // 4)
+    logger.debug(f'aspect {aspect}')
+
+    data1_3 = database.get_item_count_per_day2_4_period('doma_dachi_kottedzhi', date_start, date_end)
     df1_3 = pd.DataFrame(data1_3, columns=['Дата'])
     df1_3.sort_values(by=['Дата'],
                       axis=0,
                       inplace=True,
                       ascending=True)
-    logger.debug(f'{df12}')
+    logger.debug(f'{df1_3}')
     histogram = sb.displot(data=df1_3,
                            x='Дата',
                            kind='hist',
@@ -313,12 +285,16 @@ def get_visualization():
                            height=6,
                            aspect=aspect)
     histogram.set(ylabel='Кол-во новых объявлений в день')
-    histogram.set(
-        title='Кол-во новых объявлений по дням | Дома, дачи и коттеджи')
+    histogram.set(title='Кол-во новых объявлений по дням | Дома, дачи и коттеджи')
+    if max_y is not None:
+        histogram.set(ylim=(0, max_y))
 
     show_bar_values(histogram)
     put_timestamp()
-    add_events(histogram)
+    if event == 1:
+        add_events(histogram)
+    else:
+        add_events_2(histogram, max_y=max_y)
     # Fix problem seaborn function 'displot' does not show up a part of the title
     # https://stackoverflow.com/questions/69386785/python-seaborn-function-displot-does-not-show-up-a-part-of-the-title
     plt.tight_layout()
@@ -326,12 +302,200 @@ def get_visualization():
     # Fix problem Saving a figure after invoking pyplot.show() results in an empty file
     # https://stackoverflow.com/questions/21875356/saving-a-figure-after-invoking-pyplot-show-results-in-an-empty-file
     fig = plt.gcf()
-    fig.savefig(f'image_out/histogram_doma_dachi_kottedzhi.png',
-                format='png', dpi=72)
+    fig.savefig(f'image_out/{file_name}.png', format='png', dpi=72)
 
     plt.show()
 
+
+def price_area_average_split_visualization(date_start, date_end, file_name, event=1, max_y_external=None):
     # 2. Средняя стоимость квадратного метра по дням вся недвижимость
+    # Количество дней в БД, чтоб знать какой длины делать картинку.
+    days_count = database.get_days_count_4_period('kvartiry_vtorichka', date_start, date_end)
+
+    # Aspect ratio
+    aspect = int(days_count[0][0] // 4)
+    logger.debug(f'aspect {aspect}')
+
+    data2 = database.get_item_date_price_area_average_union_4_period(date_start, date_end)
+    df2 = pd.DataFrame(data2, columns=['Дата', 'Средняя стоимость за м2, руб.',
+                                       'Тип недвижимости'])
+
+    df2.sort_values(by=['Дата'],
+                    axis=0,
+                    inplace=True,
+                    ascending=True)
+
+    logger.debug(f'{df2}')
+
+    color_palette = {'квартиры-вторичка': '#2ca02c',
+                     'Дома, дачи и коттеджи': '#ff7f0e',
+                     'квартиры-новострой': '#1f77b4'
+                     }
+
+    av_price = sb.relplot(data=df2,
+                          x='Дата',
+                          y='Средняя стоимость за м2, руб.',
+                          kind="line",
+                          hue='Тип недвижимости',
+                          height=6,
+                          aspect=aspect,
+                          palette=color_palette)
+    av_price.set(title='Средняя стоимость квартир за м2, руб. по дням')
+    if max_y_external is not None:
+        av_price.set(ylim=(0, max_y_external))
+
+    # Shift legend to another position
+    # https://stackoverflow.com/questions/39803385/what-does-a-4-element-tuple-argument-for-bbox-to-anchor-mean-in-matplotlib/39806180#39806180
+    legend = av_price._legend
+    legend.set_bbox_to_anchor([1, 0.9])
+    #  Add annotations with average price
+    max_y = 0
+
+    for x, y, item_type in zip(df2['Дата'],
+                               df2['Средняя стоимость за м2, руб.'],
+                               df2['Тип недвижимости']):
+        if y >= max_y:
+            max_y = y
+        # the position of the data label relative to the data point can be
+        # adjusted by adding/subtracting a value from the x / y coordinates
+
+        # Simple text
+        # plt.text(x=x,  # x-coordinate position of data label
+        #          # y-coordinate position of data label, adjusted to be 150 below the data point
+        #          y=y + 150,
+        #          s='{:.0f}'.format(y),  # data label, formatted to ignore decimals
+        #          color='#1f77b4')  # set colour of line
+
+        # text with background
+        plt.text(x, y - 150, '{:.0f}'.format(y), color='white').set_backgroundcolor(color_palette.get(item_type))
+        """
+        if item_type == 'квартиры-вторичка':
+            plt.text(x, y - 150, '{:.0f}'.format(y),
+                     color='white').set_backgroundcolor(
+                '#2ca02c')
+        elif item_type == 'Дома, дачи и коттеджи':
+            plt.text(x, y - 150, '{:.0f}'.format(y),
+                     color='white').set_backgroundcolor(
+                '#ff7f0e')
+        else:
+            plt.text(x, y - 150, '{:.0f}'.format(y),
+                     color='white').set_backgroundcolor(
+                '#1f77b4')
+        """
+    put_timestamp()
+    if event == 1:
+        add_events(av_price, max_y)
+    else:
+        add_events_2(av_price, max_y)
+
+    # Fix problem seaborn function 'displot' does not show up a part of the title
+    # https://stackoverflow.com/questions/69386785/python-seaborn-function-displot-does-not-show-up-a-part-of-the-title
+    plt.tight_layout()
+
+    # Fix problem Saving a figure after invoking pyplot.show() results in an empty file
+    # https://stackoverflow.com/questions/21875356/saving-a-figure-after-invoking-pyplot-show-results-in-an-empty-file
+    fig = plt.gcf()
+    fig.savefig(f'image_out/{file_name}.png', format='png', dpi=72)
+
+    plt.show()
+
+
+def kvartiry_vtorichka_sevastopol_split_visualization(date_start, date_end, file_name, event=1, max_y=None):
+    # 4. Количество новых объявлений по Севастополю по дням
+    # Количество дней в БД, чтоб знать какой длины делать картинку.
+    days_count = database.get_days_count_4_period('kvartiry_vtorichka',
+                                                  date_start, date_end)
+
+    # Aspect ratio
+    aspect = int(days_count[0][0] // 4)
+    logger.debug(f'aspect {aspect}')
+
+    data2 = database.get_item_date_price_area_average_union_4_period(
+        date_start, date_end)
+    data4 = database.get_item_count_sevastopol_4_period('kvartiry_vtorichka', date_start, date_end)
+    df4 = pd.DataFrame(data4, columns=['Дата'])
+    df4.sort_values(by=['Дата'],
+                    axis=0,
+                    inplace=True,
+                    ascending=True)
+
+    logger.debug(f'{df4}')
+
+    histogram_sevastopol = sb.displot(data=df4,
+                                      x='Дата',
+                                      kind='hist',
+                                      kde=True,
+                                      height=6,
+                                      aspect=aspect
+                                      )
+    histogram_sevastopol.set(ylabel='Кол-во объявлений')
+    histogram_sevastopol.set(title='Количество новых объявлений по Севастополю по дням')
+    if max_y is not None:
+        histogram_sevastopol.set(ylim=(0, max_y))
+
+    show_bar_values(histogram_sevastopol)
+    put_timestamp()
+    if event == 1:
+        add_events(histogram_sevastopol)
+    else:
+        add_events_2(histogram_sevastopol, max_y=max_y)
+
+    # Fix problem seaborn function 'displot' does not show up a part of the title
+    # https://stackoverflow.com/questions/69386785/python-seaborn-function-displot-does-not-show-up-a-part-of-the-title
+    plt.tight_layout()
+
+    # Fix problem Saving a figure after invoking pyplot.show() results in an empty file
+    # https://stackoverflow.com/questions/21875356/saving-a-figure-after-invoking-pyplot-show-results-in-an-empty-file
+    fig = plt.gcf()
+    fig.savefig(f'image_out/{file_name}.png', format='png', dpi=72)
+    plt.show()
+
+
+def get_visualization():
+    ########################### New Version ###################################
+    # Plot style
+    sb.set_style("whitegrid",
+                 {"grid.color": ".6",
+                  "grid.linestyle": ":"
+                  })
+
+    # sb.set(rc={"figure.figsize": (aspect, 6)}) #width=30, #height=6
+
+    today = (datetime.today() + timedelta(days=1)).strftime('%Y-%m-%d')
+
+    kvartiry_vtorichka_split_visualization(date_start='2022-01-01', date_end='2023-06-01', file_name='histogram_vtorichka_1')
+    kvartiry_vtorichka_split_visualization(date_start='2023-06-01', date_end=today, file_name='histogram_vtorichka_2', event=2, max_y=1200)
+
+    kvartiry_novostroyka_split_visualization(date_start='2022-01-01', date_end='2023-06-01', file_name='histogram_vtorichka_novostroy_1')
+    kvartiry_novostroyka_split_visualization(date_start='2023-06-01', date_end=today, file_name='histogram_vtorichka_novostroy_2', event=2, max_y=1000)
+
+    doma_dachi_kottedzhi_split_visualization(date_start='2022-01-01', date_end='2023-06-01', file_name='histogram_doma_dachi_kottedzhi_1')
+    doma_dachi_kottedzhi_split_visualization(date_start='2023-06-01', date_end=today, file_name='histogram_doma_dachi_kottedzhi_2', event=2, max_y=2000)
+
+    price_area_average_split_visualization(date_start='2022-01-01',
+                                             date_end='2023-06-01',
+                                             file_name='av_price_1')
+    price_area_average_split_visualization(date_start='2023-06-01',
+                                             date_end=today,
+                                             file_name='av_price_2',
+                                             event=2)
+
+    kvartiry_vtorichka_sevastopol_split_visualization(date_start='2022-01-01',
+                                           date_end='2023-06-01',
+                                           file_name='histogram_sevastopol_1')
+    kvartiry_vtorichka_sevastopol_split_visualization(date_start='2023-06-01',
+                                           date_end=today,
+                                           file_name='histogram_sevastopol_2',
+                                           event=2, max_y=350)
+    ########################### End New Version ###############################
+
+    # 2. Средняя стоимость квадратного метра по дням вся недвижимость
+    # Количество дней в БД, чтоб знать какой длины делать картинку.
+    days_count = database.get_days_count('kvartiry_vtorichka')
+
+    # Aspect ratio
+    aspect = int(days_count[0][0] // 4)
+    logger.debug(f'aspect {aspect}')
     data2 = database.get_item_date_price_area_average_union()
     df2 = pd.DataFrame(data2, columns=['Дата', 'Средняя стоимость за м2, руб.',
                                        'Тип недвижимости'])
@@ -387,6 +551,7 @@ def get_visualization():
 
     put_timestamp()
     add_events(av_price, max_y)
+    add_events_2(av_price, max_y)
 
     # Fix problem seaborn function 'displot' does not show up a part of the title
     # https://stackoverflow.com/questions/69386785/python-seaborn-function-displot-does-not-show-up-a-part-of-the-title
@@ -435,44 +600,17 @@ def get_visualization():
 
     plt.show()
 
-    # 4. Количество новых объявлений по Севастополю по дням
-    data4 = database.get_item_count_sevastopol_simple('kvartiry_vtorichka')
-    df4 = pd.DataFrame(data4, columns=['Дата'])
-    df4.sort_values(by=['Дата'],
-                    axis=0,
-                    inplace=True,
-                    ascending=True)
-
-    logger.debug(f'{df4}')
-
-    histogram_sevastopol = sb.displot(data=df4,
-                                      x='Дата',
-                                      kind='hist',
-                                      kde=True,
-                                      height=6,
-                                      aspect=aspect
-                                      )
-    histogram_sevastopol.set(ylabel='Кол-во объявлений')
-    histogram_sevastopol.set(
-        title='Количество новых объявлений по Севастополю по дням')
-
-    show_bar_values(histogram_sevastopol)
-    put_timestamp()
-    add_events(histogram_sevastopol)
-
-    # Fix problem seaborn function 'displot' does not show up a part of the title
-    # https://stackoverflow.com/questions/69386785/python-seaborn-function-displot-does-not-show-up-a-part-of-the-title
-    plt.tight_layout()
-
-    # Fix problem Saving a figure after invoking pyplot.show() results in an empty file
-    # https://stackoverflow.com/questions/21875356/saving-a-figure-after-invoking-pyplot-show-results-in-an-empty-file
-    fig = plt.gcf()
-    fig.savefig(f'image_out/histogram_sevastopol.png',
-                format='png', dpi=72)
-    plt.show()
-
     logger.info(f'Visualization complete!')
 
+
+ # Set up logging
+logging.config.fileConfig("logging_visualisation.ini",
+                          disable_existing_loggers=False)
+logger = logging.getLogger(__name__)
+# Remove matplotlib.font_manager from logging
+# logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
+# Remove all matplotlib from logging
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
 
 if __name__ == '__main__':
     get_visualization()

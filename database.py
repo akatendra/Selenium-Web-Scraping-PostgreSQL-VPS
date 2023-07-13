@@ -2,6 +2,7 @@ import psycopg2
 from psycopg2 import Error
 import logging.config
 import scraper
+from datetime import datetime
 # from config_local import user, password, host, port, database
 from config_vps import user, password, host, port, database
 
@@ -134,12 +135,25 @@ def get_days_count(table):
     sql_get_days_count = f'''
                             SELECT Count(*)
                             FROM   (SELECT To_char(item_date, 'YYYY-MM-DD')
-                                    FROM   kvartiry_vtorichka
+                                    FROM   {table}
                                     GROUP  BY To_char(item_date, 'YYYY-MM-DD')) AS itmd;
                           '''
     days_count = execute_sql_query(sql_get_days_count)
     logger.debug(f'days_count: {days_count}')
     return days_count
+
+
+def get_days_count_4_period(table, date_start, date_end):
+    sql_get_days_count_4_period = f'''
+                            SELECT Count(*)
+                            FROM   (SELECT To_char(item_date, 'YYYY-MM-DD')
+                                    FROM   {table}
+                                    WHERE  item_date BETWEEN '{date_start}'::date AND '{date_end}'::date
+                                    GROUP  BY To_char(item_date, 'YYYY-MM-DD')) AS itmd;
+                          '''
+    days_count_4_period = execute_sql_query(sql_get_days_count_4_period)
+    logger.debug(f'days_count_4_period: {date_start}/{date_end} {days_count_4_period}')
+    return days_count_4_period
 
 
 def write_to_db_kvartiry_vtorichka(data):
@@ -311,6 +325,20 @@ def get_item_count_per_day2(table):
     #     f'item_count_per_day received: {len(item_count_per_day)} | {item_count_per_day}')
     return item_count_per_day
 
+def get_item_count_per_day2_4_period(table, date_start, date_end):
+    sql_get_item_count_per_day_4_period = f'''
+                                 SELECT 
+                                     to_char(item_date, 'YYYY-MM-DD Dy') 
+                                 FROM 
+                                    {table}
+                                 WHERE
+                                    item_date BETWEEN '{date_start}'::date AND '{date_end}'::date;
+                                 '''
+    item_count_per_day_4_period = execute_sql_query(sql_get_item_count_per_day_4_period)
+    logger.debug(
+        f'item_count_per_day_4_period received: {len(item_count_per_day_4_period)} | {item_count_per_day_4_period}')
+    return item_count_per_day_4_period
+
 
 def get_item_count_per_day3():
     sql_get_item_count_per_day = f'''
@@ -394,6 +422,38 @@ def get_item_date_price_area_average_union():
     #     f'item_date_price_area_av received: {len(item_date_price_area_av_union)} | {item_date_price_area_av_union}')
     return item_date_price_area_av_union
 
+
+def get_item_date_price_area_average_union_4_period(date_start, date_end):
+    sql_get_item_date_price_area_average_union_4_period = f'''
+        SELECT to_char(item_date::date, 'YYYY-MM-DD Dy'),
+               ROUND(AVG(item_price / item_area)) AS av_price_per_sq_m,
+               property_type
+        FROM kvartiry_vtorichka
+        WHERE item_date BETWEEN '{date_start}'::date AND '{date_end}'::date
+        GROUP BY to_char(item_date::date, 'YYYY-MM-DD Dy'),
+                 property_type
+        UNION
+        SELECT to_char(item_date::date, 'YYYY-MM-DD Dy'),
+               ROUND(AVG(item_price / item_area)) AS av_price_per_sq_m,
+               property_type
+        FROM kvartiry_novostroyka
+        WHERE item_date BETWEEN '{date_start}'::date AND '{date_end}'::date
+        GROUP BY to_char(item_date::date, 'YYYY-MM-DD Dy'),
+                 property_type
+        UNION
+        SELECT to_char(item_date::date, 'YYYY-MM-DD Dy'),
+               ROUND(AVG(item_price / item_area)) AS av_price_per_sq_m,
+               property_type
+        FROM doma_dachi_kottedzhi
+        WHERE item_date BETWEEN '{date_start}'::date AND '{date_end}'::date
+        GROUP BY to_char(item_date::date, 'YYYY-MM-DD Dy'),
+                 property_type
+                                            ;
+                                            '''
+    item_date_price_area_av_union_4_period = execute_sql_query(sql_get_item_date_price_area_average_union_4_period)
+    # logger.debug(
+    #     f'item_date_price_area_av received: {len(item_date_price_area_av_union)} | {item_date_price_area_av_union}')
+    return item_date_price_area_av_union_4_period
 
 def get_item_count_by_cities(table):
     sql_get_item_count_by_cities = f'''
@@ -480,6 +540,24 @@ def get_item_count_sevastopol_simple(table):
     #     f'item_date_price_area_av received: {len(item_count_sevastopol)} | {item_count_sevastopol}')
     return item_count_sevastopol
 
+
+def get_item_count_sevastopol_4_period(table, date_start, date_end):
+    sql_get_item_count_sevastopol_4_period = f'''
+                                 SELECT
+                                     to_char(item_date, 'YYYY-MM-DD Dy')
+                                 FROM 
+                                    {table}
+                                 WHERE
+                                     item_city LIKE '%Севастополь%'
+                                 AND
+                                     item_date BETWEEN '{date_start}'::date AND '{date_end}'::date
+                                 ORDER BY
+                                     to_char(item_date, 'YYYY-MM-DD Dy')
+                                 '''
+    item_count_sevastopol_4_period = execute_sql_query(sql_get_item_count_sevastopol_4_period)
+    # logger.debug(
+    #     f'item_date_price_area_av received: {len(item_count_sevastopol)} | {item_count_sevastopol}')
+    return item_count_sevastopol_4_period
 
 def get_item_cities():
     sql_get_item_cities = f'''

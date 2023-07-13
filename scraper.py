@@ -181,6 +181,8 @@ NONE_CRIMEA = (
     '/dzhiginka/',
     '/golubitskaya/',
     '/krasnodarskiy_kray_strelka/',
+    '/myshako/',
+    '/novorossiysk/',
     '/sennoy/',
     '/starotitarovskaya/',
     '/supseh/',
@@ -326,40 +328,27 @@ def parse_html_kvartiry_vtorichka(html, page):
                 item_floors_in_house = None
 
             # Getting an item price.
-            # item_price_str = item.select_one(
-            #     'span[class*="price-text-"]').text
             item_price_str = item.select_one('meta[itemprop="price"]') # 24-05-2023 Исправление после смены форматирования
             logger.debug(f'item_price_str:  {item_price_str}')
-            # item_price = int(
-            #     ''.join(
-            #         char for char in item_price_str if char.isdecimal()))
+
             item_price = item_price_str.get('content') if item_price_str else None # 24-05-2023 Исправление после смены форматирования
             logger.debug(f'item_price:  {item_price}')
 
             # Getting an item price currency.
-            # item_currency = item.select_one(
-            #     'span[class*="price-currency-"]').text
             item_currency = item.select_one('meta[itemprop="priceCurrency"]').get('content') # 24-05-2023 Исправление после смены форматирования
             logger.debug(f'item_currency:  {item_currency}')
 
-            # Getting an item address.
-            item_geo_address = item.select_one(
-                'span[class*="geo-address-"]')
-            if item_geo_address:
-                item_address = item_geo_address.find('span').text
-            else:
-                item_address = None
-            logger.debug(f'item_address:  {item_address}')
+            # Getting an item address. 08-06-2023 Исправлено после смены форматирования
+            # Получение адреса.
+            item_address_element = item.select(
+                'div[data-marker="item-address"] p > span')
+            item_address = item_address_element[0].text.strip() if item_address_element else None
+            logger.debug(f'item_address: {item_address}')
 
-            # Getting an item city.
-            item_geo_georeferences = item.select_one(
-                'div[class*="geo-georeferences-"]')
-            if item_geo_georeferences:
-                item_city = item_geo_georeferences.find('span').find(
-                    'span').text
-            else:
-                item_city = None
-            logger.debug(f'item_city:  {item_city}')
+            # Получение города (если присутствует).
+            item_city_element = item_address_element[1]
+            item_city = item_city_element.text.strip() if item_city_element else None
+            logger.debug(f'item_city: {item_city}')
 
             # Getting an item publishing date.
             item_date_data = item.select_one('p[data-marker="item-date"]').text  # 24-05-2023 Исправление после смены форматирования
@@ -528,54 +517,56 @@ def parse_html_kvartiry_novostroyka(html, page):
                 item_floors_in_house = None
 
             # Getting an item price.
-            # item_price_str = item.select_one(
-            #     'span[class*="price-text-"]').text
             item_price_str = item.select_one(
                 'meta[itemprop="price"]')  # 24-05-2023 Исправление после смены форматирования
             logger.debug(f'item_price_str:  {item_price_str}')
-            # item_price = int(
-            #     ''.join(
-            #         char for char in item_price_str if char.isdecimal()))
+
             item_price = item_price_str.get(
                 'content') if item_price_str else None  # 24-05-2023 Исправление после смены форматирования
             logger.debug(f'item_price:  {item_price}')
 
             # Getting an item price currency.
-            # item_currency = item.select_one(
-            #     'span[class*="price-currency-"]').text
             item_currency = item.select_one(
                 'meta[itemprop="priceCurrency"]').get(
                 'content')  # 24-05-2023 Исправление после смены форматирования
             logger.debug(f'item_currency:  {item_currency}')
 
-            # Getting a builder's name.
-            item_development_name_obj = item.select_one(
-                'div[data-marker="item-development-name"]')
-            if item_development_name_obj:
-                item_development_name = item_development_name_obj.text
-            else:
-                item_development_name = None
-            logger.debug(
-                f'item_development_name:  {item_development_name}')
-            # Getting an item address.
-            item_geo_address = item.select_one(
-                'span[class*="geo-address-"]')
-            if item_geo_address:
-                item_address = item_geo_address.find('span').text
-            else:
-                item_address = None
-            logger.debug(f'item_address:  {item_address}')
+            # Getting an item development name. 03-06-2023 Исправлено после смены форматирования
+            item_development_name_element = item.select_one(
+                'div[data-marker="item-address"] [data-marker="item-development-name"]')
+            item_development_name = item_development_name_element.text.strip() if item_development_name_element else None
+            logger.debug(f'item_development_name: {item_development_name}')
 
-            # Getting an item city.
-            item_geo_georeferences = item.select_one(
-                'div[class*="geo-georeferences-"]')
-            if item_geo_georeferences:
-                item_city = item_geo_georeferences.find('span').find(
-                    'span').text
-            else:
-                item_city = None
-            logger.debug(f'item_city:  {item_city}')
+            # Getting an item address. 08-06-2023 Исправлено после смены форматирования
+            # Получение адреса.
+            item_address_element = item.select(
+                'div[data-marker="item-address"] p > span')
+            item_address = item_address_element[0].text.strip() if item_address_element else None
+            logger.debug(f'item_address: {item_address}')
 
+            # Получение города (если присутствует).
+            item_city_element = item_address_element[1]
+            item_city = item_city_element.text.strip() if item_city_element else None
+            logger.debug(f'item_city: {item_city}')
+            """
+            item_address_element = item.select_one(
+                'div[data-marker="item-address"] p > span')
+            item_address = item_address_element.text.strip() if item_address_element else None
+            logger.debug(f'item_address: {item_address}')
+
+            item_city = None
+            # Получение первого элемента <p>, содержащего два элемента <span>.
+            item_p_element = item.select_one(
+                'div[data-marker="item-address"] p:has(span + span)')
+
+            if item_p_element:
+                # Получение города.
+                item_city_element = item_p_element.select_one(
+                    'span:last-child')
+                if item_city_element:
+                    item_city = item_city_element.text.strip()
+            logger.debug(f'item_city: {item_city}')
+            """
             # Getting an item publishing date.
             item_date_data = item.select_one(
                 'p[data-marker="item-date"]').text  # 24-05-2023 Исправление после смены форматирования
@@ -724,26 +715,17 @@ def parse_html_doma_dachi_kottedzhi(html, page):
                 'content')  # 24-05-2023 Исправление после смены форматирования
             logger.debug(f'item_currency:  {item_currency}')
 
+            # Getting an item city.  03-06-2023 Исправлено после смены форматирования
             item_city = None
             item_address = None
-            # Getting an item address.
-            item_geo_address = item.select_one(
-                'span[class*="geo-address-"]')
-            logger.debug(f'item_geo_address:  {item_geo_address}')
-            if item_geo_address:
-                item_address_text = item_geo_address.find('span').text
-                logger.debug(f'item_address_text:  {item_address_text}')
+            
+            item_city_element = item.select_one(
+                'div[data-marker="item-address"] p > span')
+            logger.debug(f'item_city_element: {item_city_element}')
+            if item_city_element:
+                item_city = item_city_element.text.strip()
 
-                # Getting an item city.
-                if ',' in item_address_text:
-                    item_address_text_list = item_address_text.split(',')
-                    item_city = item_address_text_list[0]
-                    item_address = item_address_text_list[1].strip()
-                else:
-                    item_city = item_address_text
-                    item_address = None
-            logger.debug(f'item_city:  {item_city}')
-            logger.debug(f'item_address:  {item_address}')
+            logger.debug(f'item_city: {item_city}')
 
             # Getting an item publishing date.
             item_date_data = item.select_one(
